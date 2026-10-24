@@ -55,7 +55,9 @@ gem 'csv-safe'
 gem 'aws-sdk-s3', require: false
 gem 'aws-sdk-sesv2', require: false
 gem 'azure-blob', require: false
-gem 'google-cloud-storage', '>= 1.48.0', require: false
+group :gcs do
+  gem 'google-cloud-storage', '>= 1.48.0', require: false
+end
 gem 'image_processing'
 
 ##-- for actionmailbox --##

@@ -9,7 +9,7 @@ ENV PNPM_VERSION=${PNPM_VERSION}
 
 # ARG default to production settings
 # For development docker-compose file overrides ARGS
-ARG BUNDLE_WITHOUT="development:test"
+ARG BUNDLE_WITHOUT="development:test:gcs"
 ENV BUNDLE_WITHOUT ${BUNDLE_WITHOUT}
 ENV BUNDLER_VERSION=2.5.16
 ARG BUNDLE_JOBS=1
@@ -69,7 +69,7 @@ RUN bundle config set --local force_ruby_platform true
 
 # Do not install development or test gems in production
 RUN if [ "$RAILS_ENV" = "production" ]; then \
-  bundle config set without 'development test'; bundle install -j ${BUNDLE_JOBS} -r 3; \
+  bundle config set without 'development test gcs'; bundle install -j ${BUNDLE_JOBS} -r 3; \
   else bundle install -j ${BUNDLE_JOBS} -r 3; \
   fi
 
