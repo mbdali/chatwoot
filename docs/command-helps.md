@@ -172,16 +172,17 @@ git push origin custom-main
 
 ---
 
-## 8. Custom Branding Architecture (RaqmiChats)
+## 8. Custom Branding Architecture (Raqmi Connect)
 
 To ensure upstream updates merge with minimal friction, custom branding is isolated away from core files.
 
 ### Branding Details
-- **Brand / App Name**: RaqmiChats
+- **Brand / App Name**: Raqmi Connect
 - **Company**: Raqmi Labs (`https://raqmilabs.com`)
 - **Primary Brand Color**: `#FF5A09` (Deep Orange)
 - **Accent / Gradient**: `#FF5A09` → `#EC7F37` → `#BE4F0C`
 - **Dark Theme Accent**: `#FF6E26`
+- **Terms & Privacy**: `https://raqmilabs.com/terms` / `https://raqmilabs.com/privacy`
 
 ### File Registry
 

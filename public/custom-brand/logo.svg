@@ -23,8 +23,8 @@
   </g>
 
   <!-- Wordmark -->
-  <text x="600" y="345" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="210" letter-spacing="-3">
-    <tspan fill="#111827">Raqmi</tspan><tspan fill="#FF5A09">Chats</tspan>
+  <text x="600" y="345" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="190" letter-spacing="-3">
+    <tspan fill="#111827">Raqmi </tspan><tspan fill="#FF5A09">Connect</tspan>
   </text>
   <text x="610" y="425" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="44" fill="#6B7280" letter-spacing="8">POWERED BY RAQMI LABS</text>
 </svg>
