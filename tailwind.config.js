@@ -1,5 +1,6 @@
 const { slateDark } = require('@radix-ui/colors');
 import { colors } from './theme/colors';
+import { brandColors } from './theme/brand-colors';
 import { icons } from './theme/icons';
 const defaultTheme = require('tailwindcss/defaultTheme');
 const plugin = require('tailwindcss/plugin');
@@ -215,6 +216,7 @@ const tailwindConfig = {
       'modal-backdrop-dark': 'rgba(0, 0, 0, 0.6)',
       current: 'currentColor',
       ...colors,
+      ...brandColors,
       body: slateDark.slate7,
     },
     keyframes: {

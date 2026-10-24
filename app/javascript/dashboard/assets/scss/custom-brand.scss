@@ -1,0 +1,23 @@
+// Custom Branding CSS Variables for RaqmiChats
+:root {
+  --brand-color: #FF5A09;
+  --brand-color-accent: #ec7f37;
+  --brand-color-dark: #be4f0c;
+  --brand-color-rgb: 255, 90, 9;
+}
+
+[data-theme='dark'] {
+  --brand-color: #ff6e26;
+  --brand-color-accent: #ff8544;
+  --brand-color-dark: #ec7f37;
+  --brand-color-rgb: 255, 110, 38;
+}
+
+// Brand utility classes
+.brand-accent-text {
+  color: var(--brand-color);
+}
+
+.brand-accent-bg {
+  background-color: var(--brand-color);
+}
