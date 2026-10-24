@@ -1,12 +1,12 @@
 import { colors } from './colors';
 
 export const brandColors = {
-  // Override modern Chatwoot brand color token
+  // Override modern Chatwoot brand color token with valid hex for Tailwind opacity support (/25, /10, etc.)
   n: {
     ...colors.n,
-    brand: 'var(--brand-color, #FF5A09)',
+    brand: '#FF5A09',
   },
-  // Dedicated RaqmiChats brand palette
+  // Dedicated Raqmi Connect brand palette
   brand: {
     DEFAULT: '#FF5A09',
     50: '#fff5ed',
