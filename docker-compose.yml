@@ -26,6 +26,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      args:
+        BUNDLE_JOBS: 1
     env_file: .env
     volumes:
       - storage_data:/app/storage
