@@ -108,6 +108,10 @@ module SuperAdmin::NavigationHelper
     path == request.path && tabs.any? { |tab| tab[:key] == key } ? key : tabs.first[:key]
   end
 
+  def application_title
+    GlobalConfigService.load('INSTALLATION_NAME', 'Raqmi Connect')
+  end
+
   private
 
   def resource_nav_items

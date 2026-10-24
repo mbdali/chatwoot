@@ -31,6 +31,15 @@ services:
     volumes:
       - storage_data:/app/storage
       - ./public/custom-brand:/app/public/custom-brand:ro
+      - ./public/brand-assets:/app/public/brand-assets:ro
+      - ./public/favicon.ico:/app/public/favicon.ico:ro
+      - ./public/favicon-16x16.png:/app/public/favicon-16x16.png:ro
+      - ./public/favicon-32x32.png:/app/public/favicon-32x32.png:ro
+      - ./public/favicon-96x96.png:/app/public/favicon-96x96.png:ro
+      - ./public/favicon-512x512.png:/app/public/favicon-512x512.png:ro
+      - ./public/favicon-badge-16x16.png:/app/public/favicon-badge-16x16.png:ro
+      - ./public/favicon-badge-32x32.png:/app/public/favicon-badge-32x32.png:ro
+      - ./public/favicon-badge-96x96.png:/app/public/favicon-badge-96x96.png:ro
     depends_on:
       - postgres
       - redis
