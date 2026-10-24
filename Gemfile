@@ -55,9 +55,7 @@ gem 'csv-safe'
 gem 'aws-sdk-s3', require: false
 gem 'aws-sdk-sesv2', require: false
 gem 'azure-blob', require: false
-group :gcs do
-  gem 'google-cloud-storage', '>= 1.48.0', require: false
-end
+gem 'google-cloud-storage', '>= 1.48.0', require: false
 gem 'image_processing'
 
 ##-- for actionmailbox --##
@@ -115,13 +113,13 @@ gem 'twitty', '~> 0.1.5'
 gem 'koala'
 # slack client
 gem 'slack-ruby-client', '~> 2.7.0'
-group :dialogflow do
-  # for dialogflow integrations
-  gem 'google-cloud-dialogflow-v2', '>= 0.24.0'
-  gem 'grpc'
-  # Translate integrations
-  gem 'google-cloud-translate-v3', '>= 0.7.0'
-end
+# for dialogflow integrations
+gem 'google-cloud-dialogflow-v2', '>= 0.24.0'
+gem 'grpc'
+# Translate integrations
+# 'google-cloud-translate' gem depends on faraday 2.0 version
+# this dependency breaks the slack-ruby-client gem
+gem 'google-cloud-translate-v3', '>= 0.7.0'
 
 ##-- apm and error monitoring ---#
 # loaded only when environment variables are set.
