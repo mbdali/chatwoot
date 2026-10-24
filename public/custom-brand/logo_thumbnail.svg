@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="raqmi-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5A09"/>
+      <stop offset="50%" stop-color="#EC7F37"/>
+      <stop offset="100%" stop-color="#BE4F0C"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#BE4F0C" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded container -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#raqmi-grad)" filter="url(#shadow)"/>
+
+  <!-- Subtle tech circuit grid pattern -->
+  <path d="M128 128H384M128 256H384M128 384H384M128 128V384M256 128V384M384 128V384"
+        stroke="#FFFFFF" stroke-width="6" stroke-opacity="0.18" stroke-linecap="round"/>
+
+  <!-- Central stylized R with tech styling -->
+  <path d="M176 160V352M176 160H272C307.346 160 336 181.49 336 216C336 250.51 307.346 272 272 272H176M272 272L336 352"
+        stroke="#FFFFFF" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Tech accent circuit dots -->
+  <circle cx="368" cy="160" r="16" fill="#FFFFFF"/>
+  <circle cx="400" cy="192" r="14" fill="#FFFFFF" fill-opacity="0.8"/>
+  <circle cx="368" cy="352" r="14" fill="#FFFFFF" fill-opacity="0.6"/>
+</svg>

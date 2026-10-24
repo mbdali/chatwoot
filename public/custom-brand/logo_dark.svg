@@ -1,0 +1,30 @@
+<svg width="2400" height="540" viewBox="0 0 2400 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="raqmi-grad-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5A09"/>
+      <stop offset="50%" stop-color="#EC7F37"/>
+      <stop offset="100%" stop-color="#BE4F0C"/>
+    </linearGradient>
+    <filter id="shadow-dark" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Left Emblem -->
+  <g transform="translate(20, 20)">
+    <rect width="500" height="500" rx="120" fill="url(#raqmi-grad-dark)" filter="url(#shadow-dark)"/>
+    <path d="M130 130H370M130 250H370M130 370H370M130 130V370M250 130V370M370 130V370"
+          stroke="#FFFFFF" stroke-width="7" stroke-opacity="0.2" stroke-linecap="round"/>
+    <path d="M170 160V340M170 160H265C300 160 330 180 330 215C330 250 300 270 265 270H170M265 270L330 340"
+          stroke="#FFFFFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="360" cy="160" r="16" fill="#FFFFFF"/>
+    <circle cx="390" cy="190" r="14" fill="#FFFFFF" fill-opacity="0.8"/>
+    <circle cx="360" cy="340" r="14" fill="#FFFFFF" fill-opacity="0.6"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="600" y="345" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="210" letter-spacing="-3">
+    <tspan fill="#FFFFFF">Raqmi</tspan><tspan fill="#FF5A09">Chats</tspan>
+  </text>
+  <text x="610" y="425" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="44" fill="#9CA3AF" letter-spacing="8">POWERED BY RAQMI LABS</text>
+</svg>
