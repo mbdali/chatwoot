@@ -128,15 +128,19 @@ To ensure upstream updates from `upstream/master` can be pulled without merge fr
 
 ```
 ├── .env                                            [Untracked / Git Ignored]
+├── docker-compose.override.yml                     [Local live code mounting]
 ├── config/initializers/custom_branding.rb          [New Standalone File]
 ├── public/custom-brand/                            [New Standalone Directory]
-│   ├── favicon.svg
-│   ├── logo.svg
+│   ├── favicon.svg, favicon.ico, favicon-*.png
+│   ├── logo.svg, logo.png
 │   ├── logo_dark.svg
-│   └── logo_thumbnail.svg
+│   └── logo_thumbnail.svg, logo_thumbnail.png
+├── public/brand-assets/                            [Raqmi Connect SVGs mirrored]
 ├── theme/
 │   ├── colors.js                                   [Pristine Upstream]
 │   └── brand-colors.js                             [New Standalone File]
+├── app/helpers/super_admin/navigation_helper.rb    [application_title override]
+├── app/views/super_admin/application/_brand.html.erb [Dynamic brand name & logo]
 ├── app/javascript/
 │   ├── dashboard/assets/scss/custom-brand.scss     [New Standalone File]
 │   ├── packs/custom-brand.scss                     [New Standalone File]
