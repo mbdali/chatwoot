@@ -1,0 +1,16 @@
+# Local development overrides for live code mounting
+# When running locally with `docker compose up`, these volumes overlay your local
+# code so you can modify Ruby code, configs, and theme without rebuilding the image.
+# On production, this file is omitted so the container runs the pure built image.
+
+services:
+  rails:
+    volumes:
+      - ./app:/app/app
+      - ./config:/app/config
+      - ./theme:/app/theme
+
+  sidekiq:
+    volumes:
+      - ./app:/app/app
+      - ./config:/app/config
