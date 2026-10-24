@@ -221,3 +221,31 @@ If upstream modifies global imports in `dashboard.js`:
 - Keep upstream's updated imports.
 - Ensure `import 'dashboard/assets/scss/custom-brand.scss';` remains among the stylesheet imports.
 
+---
+
+## 9. Local Docker Verification Workflow
+
+To test and verify the custom-branded build (`Raqmi Connect`) locally via Docker:
+
+### 1. Initialize Database & Run Migrations
+```bash
+docker compose -f docker-compose.yml run --rm rails bundle exec rails db:chatwoot_prepare
+```
+
+### 2. Start the Stack in Detached Mode
+```bash
+docker compose -f docker-compose.yml up -d
+```
+
+### 3. Verify Custom Branding
+- Visit `http://localhost:3000`.
+- Verify the header and tab title display **Raqmi Connect**.
+- Verify that assets load correctly from `/custom-brand/` (`logo.svg` or `logo.png`, `logo-thumbnail.png`, etc.).
+- Verify the primary theme accents and buttons appear in Raqmi orange (`#FF5A09`).
+
+### 4. Stop the Containers
+```bash
+docker compose -f docker-compose.yml down
+```
+
+
