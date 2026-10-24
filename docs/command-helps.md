@@ -227,25 +227,44 @@ If upstream modifies global imports in `dashboard.js`:
 
 To test and verify the custom-branded build (`Raqmi Connect`) locally via Docker:
 
-### 1. Initialize Database & Run Migrations
+### 1. Initialize Database & Run Migrations (One-time)
 ```bash
-docker compose -f docker-compose.yml run --rm rails bundle exec rails db:chatwoot_prepare
+docker compose run --rm rails bundle exec rails db:chatwoot_prepare
 ```
 
-### 2. Start the Stack in Detached Mode
+### 2. Start the Stack in Detached Mode (Local Development)
+Automatically includes `docker-compose.override.yml` to mount `app/`, `config/`, and `theme/` live:
 ```bash
-docker compose -f docker-compose.yml up -d
+docker compose up -d
 ```
 
-### 3. Verify Custom Branding
+### 3. Fast Reloading During Development
+- **Static Assets & Logos** (`public/custom-brand/`): Instant refresh in browser (**0s**, no restart required).
+- **Ruby Code & Initializers** (`app/`, `config/`): Apply changes in ~2 seconds:
+  ```bash
+  docker compose restart rails
+  ```
+- **Rebuilding Assets** (if changing Vue/SCSS):
+  ```bash
+  docker compose build
+  docker compose up -d
+  ```
+
+### 4. Verify Custom Branding
 - Visit `http://localhost:3000`.
 - Verify the header and tab title display **Raqmi Connect**.
 - Verify that assets load correctly from `/custom-brand/` (`logo.svg` or `logo.png`, `logo-thumbnail.png`, etc.).
 - Verify the primary theme accents and buttons appear in Raqmi orange (`#FF5A09`).
 
-### 4. Stop the Containers
+### 5. Production Server Mode (No Local Mounts)
+To run only the pure built Docker image without local volume overrides:
 ```bash
-docker compose -f docker-compose.yml down
+docker compose -f docker-compose.yml up -d
+```
+
+### 6. Stop the Containers
+```bash
+docker compose down
 ```
 
 
