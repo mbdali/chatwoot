@@ -28,7 +28,7 @@ services:
       dockerfile: docker/Dockerfile
       args:
         BUNDLE_JOBS: 1
-        BUNDLE_WITHOUT: "development:test:gcs"
+        BUNDLE_WITHOUT: "development:test:gcs:dialogflow"
     env_file: .env
     volumes:
       - storage_data:/app/storage
