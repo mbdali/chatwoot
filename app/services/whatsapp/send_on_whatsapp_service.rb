@@ -1,11 +1,30 @@
 class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
+  CONNECTION_ERRORS = [Net::OpenTimeout, Errno::ECONNREFUSED, SocketError].freeze
+
+  def perform
+    return if message.source_id.present?
+
+    super
+  rescue *CONNECTION_ERRORS => e
+    handle_dispatch_error("DISPATCH_NOT_SENT: #{e.class}")
+  rescue StandardError, Timeout::Error => e
+    handle_dispatch_error("DISPATCH_UNKNOWN: #{e.class}: #{e.message}")
+  end
+
   private
+
+  def handle_dispatch_error(error_message)
+    return if message.source_id.present?
+
+    message.update!(status: :failed, external_error: error_message)
+  end
 
   def channel_class
     Channel::Whatsapp
   end
 
   def perform_reply
+    return if message.source_id.present?
     if template_params.present?
       tag_contact_info_template_request
       return send_template_message
