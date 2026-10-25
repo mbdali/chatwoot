@@ -46,11 +46,7 @@ class Whatsapp::Providers::BaseService
     return if message.blank?
 
     # https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes/#sample-response
-    error_message = if response.respond_to?(:code) && response.code.to_i >= 500
-                      "DISPATCH_UNKNOWN: HTTP #{response.code}"
-                    else
-                      error_message(response)
-                    end
+    error_message = error_message(response)
     return if error_message.blank?
 
     message.external_error = error_message

@@ -1,0 +1,7 @@
+# Raqmi Connect fork strings, kept out of upstream's en.yml so an upstream merge cannot conflict with them.
+en:
+  conversations:
+    messages:
+      retry:
+        erp_outbox_error: 'This message was sent by the ERP. Resend it from the ERP.'
+        dispatch_unknown_error: 'Delivery status is unknown and the message may have been delivered. It cannot be retried.'

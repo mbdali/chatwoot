@@ -601,25 +601,6 @@ describe Whatsapp::Providers::WhatsappCloudService do
         expect(message.reload.external_error).to be_nil
       end
     end
-
-    context 'when HTTP response is 5xx' do
-      let(:server_error_response_object) do
-        instance_double(
-          HTTParty::Response,
-          code: 502,
-          body: 'Bad Gateway',
-          parsed_response: {}
-        )
-      end
-
-      it 'records DISPATCH_UNKNOWN: HTTP <code>' do
-        service.instance_variable_set(:@message, message)
-        service.send(:handle_error, server_error_response_object, message)
-
-        expect(message.reload.status).to eq('failed')
-        expect(message.reload.external_error).to eq('DISPATCH_UNKNOWN: HTTP 502')
-      end
-    end
   end
 
   describe 'CSAT template methods' do
