@@ -12,7 +12,20 @@
     "MENTION_HEADING": "Mentions",
     "UNATTENDED_HEADING": "Unattended",
     "SEARCH": {
-      "INPUT": "Search for People, Chats, Saved Replies .."
+      "INPUT": "Search for People, Chats, Saved Replies ..",
+      "PLACEHOLDER": "Search or start new chat",
+      "CLEAR": "Clear search",
+      "BACK": "Back to chats",
+      "TABS": {
+        "ALL": "All",
+        "CHATS": "Chats",
+        "MESSAGES": "Messages",
+        "CONTACTS": "Contacts"
+      },
+      "NO_RESULTS": "No results found for \"{query}\"",
+      "MIN_CHARACTERS": "Type at least 2 characters to search",
+      "VIEW_CONTACT": "View contact details",
+      "OPEN_CONVERSATION": "Open conversation"
     },
     "FILTER_ALL": "All",
     "ASSIGNEE_TYPE_TABS": {

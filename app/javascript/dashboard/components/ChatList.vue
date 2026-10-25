@@ -1,7 +1,18 @@
 <script setup>
-import { ref, unref, provide, computed, watch, onMounted } from 'vue';
+import {
+  ref,
+  unref,
+  provide,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+} from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
+import { debounce } from '@chatwoot/utils';
+import ContactAPI from 'dashboard/api/contacts';
+import { conversationUrl, frontendURL } from 'dashboard/helper/URLHelper';
 import {
   useMapGetter,
   useFunctionGetter,
@@ -9,6 +20,8 @@ import {
 
 import ChatListHeader from './ChatListHeader.vue';
 import ConversationList from './ConversationList.vue';
+import ConversationSearchInput from 'dashboard/components-next/Conversation/search/ConversationSearchInput.vue';
+import ConversationSearchResults from 'dashboard/components-next/Conversation/search/ConversationSearchResults.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import ConversationFilter from 'next/filter/ConversationFilter.vue';
 import SaveCustomView from 'next/filter/SaveCustomView.vue';
@@ -901,6 +914,144 @@ watch(chatLists, () => {
 
 // Filters can be applied from outside the list, so clear the selection here.
 watch(appliedFilters, () => resetBulkActions());
+
+// Search logic
+const searchUIFlags = useMapGetter('conversationSearch/getUIFlags');
+const isSearchFetching = computed(
+  () => searchUIFlags.value?.isFetching || false
+);
+
+const searchQuery = ref('');
+const isSearchActive = computed(
+  () => Boolean(searchQuery.value && searchQuery.value.trim().length > 0)
+);
+
+const activeConversationId = computed(() => route.params.conversation_id);
+const activeMessageId = computed(() => route.query.messageId);
+
+const debouncedSearch = debounce(query => {
+  const trimmed = query?.trim() || '';
+  if (trimmed.length > 1 || trimmed.match(/^[0-9]+$/)) {
+    store.dispatch('conversationSearch/clearSearchResults');
+    store.dispatch('conversationSearch/fullSearch', { q: trimmed });
+  } else {
+    store.dispatch('conversationSearch/clearSearchResults');
+  }
+}, 300);
+
+watch(searchQuery, newQuery => {
+  debouncedSearch(newQuery);
+});
+
+const clearSearch = () => {
+  searchQuery.value = '';
+  store.dispatch('conversationSearch/clearSearchResults');
+};
+
+const onSelectSearchConversation = (conversation, e) => {
+  const conversationId = conversation.id;
+  const path = frontendURL(
+    conversationUrl({
+      accountId: currentAccountId.value,
+      id: conversationId,
+    })
+  );
+  if (e?.metaKey || e?.ctrlKey) {
+    window.open(
+      window.chatwootConfig.hostURL + path,
+      '_blank',
+      'noopener noreferrer nofollow'
+    );
+    return;
+  }
+  router.push({ path });
+};
+
+const onSelectSearchMessage = (message, e) => {
+  const conversationId = message.conversationId;
+  const path = frontendURL(
+    conversationUrl({
+      accountId: currentAccountId.value,
+      id: conversationId,
+    })
+  );
+  if (e?.metaKey || e?.ctrlKey) {
+    window.open(
+      window.chatwootConfig.hostURL + `${path}?messageId=${message.id}`,
+      '_blank',
+      'noopener noreferrer nofollow'
+    );
+    return;
+  }
+  router.push({
+    path,
+    query: { messageId: message.id },
+  });
+};
+
+const onViewSearchContact = (contact, e) => {
+  const path = frontendURL(
+    `accounts/${currentAccountId.value}/contacts/${contact.id}`
+  );
+  if (e?.metaKey || e?.ctrlKey) {
+    window.open(
+      window.chatwootConfig.hostURL + path,
+      '_blank',
+      'noopener noreferrer nofollow'
+    );
+    return;
+  }
+  router.push({ path });
+};
+
+const onSelectSearchContact = async (contact, e) => {
+  try {
+    const response = await ContactAPI.getConversations(contact.id);
+    const conversations = response.data?.payload || [];
+    if (conversations.length > 0) {
+      const sorted = [...conversations].sort(
+        (a, b) => b.created_at - a.created_at || b.id - a.id
+      );
+      const conversationId = sorted[0].id;
+      const path = frontendURL(
+        conversationUrl({
+          accountId: currentAccountId.value,
+          id: conversationId,
+        })
+      );
+      if (e?.metaKey || e?.ctrlKey) {
+        window.open(
+          window.chatwootConfig.hostURL + path,
+          '_blank',
+          'noopener noreferrer nofollow'
+        );
+        return;
+      }
+      router.push({ path });
+      return;
+    }
+  } catch (error) {
+    // If fetching conversations fails, fall back to viewing contact details
+  }
+
+  onViewSearchContact(contact, e);
+};
+
+// Clear search when switching inbox, label, team, or folders
+watch(
+  () => [props.conversationInbox, props.label, props.teamId, props.foldersId],
+  () => {
+    if (isSearchActive.value) {
+      clearSearch();
+    }
+  }
+);
+
+onUnmounted(() => {
+  if (isSearchActive.value) {
+    clearSearch();
+  }
+});
 </script>
 
 <template>
@@ -928,6 +1079,12 @@ watch(appliedFilters, () => resetBulkActions());
       @basic-filter-change="onBasicFilterChange"
     />
 
+    <ConversationSearchInput
+      v-model="searchQuery"
+      :is-fetching="isSearchFetching"
+      @clear="clearSearch"
+    />
+
     <TeleportWithDirection
       v-if="showAddFoldersModal"
       to="#saveFilterTeleportTarget"
@@ -949,42 +1106,57 @@ watch(appliedFilters, () => resetBulkActions());
       @close="onCloseDeleteFoldersModal"
     />
 
-    <ChatTypeTabs
-      v-if="!hasAppliedFiltersOrActiveFolders"
-      :items="assigneeTabItems"
-      :active-tab="activeAssigneeTab"
-      is-compact
-      @chat-tab-change="updateAssigneeTab"
-    />
+    <template v-if="isSearchActive">
+      <ConversationSearchResults
+        :query="searchQuery"
+        :is-fetching="isSearchFetching"
+        :active-conversation-id="activeConversationId"
+        :active-message-id="activeMessageId"
+        :is-on-expanded-layout="isOnExpandedLayout"
+        @select-conversation="onSelectSearchConversation"
+        @select-message="onSelectSearchMessage"
+        @select-contact="onSelectSearchContact"
+        @view-contact="onViewSearchContact"
+      />
+    </template>
+    <template v-else>
+      <ChatTypeTabs
+        v-if="!hasAppliedFiltersOrActiveFolders"
+        :items="assigneeTabItems"
+        :active-tab="activeAssigneeTab"
+        is-compact
+        @chat-tab-change="updateAssigneeTab"
+      />
 
-    <p
-      v-if="!chatListLoading && !conversationList.length"
-      class="flex overflow-auto justify-center items-center p-4"
-    >
-      {{ $t('CHAT_LIST.LIST.404') }}
-    </p>
-    <ConversationBulkActions
-      :conversations="selectedConversations"
-      :all-conversations-selected="allConversationsSelected"
-      :selected-inboxes="uniqueInboxes"
-      :show-open-action="allSelectedConversationsStatus('open')"
-      :show-resolved-action="allSelectedConversationsStatus('resolved')"
-      :show-snoozed-action="allSelectedConversationsStatus('snoozed')"
-      :class="isOnExpandedLayout && 'sm:!w-[24rem] !w-full'"
-      @select-all-conversations="toggleSelectAll"
-    />
-    <ConversationList
-      :conversation-list="conversationList"
-      :is-loading="chatListLoading"
-      :show-end-of-list-message="showEndOfListMessage"
-      :label="label"
-      :team-id="teamId"
-      :folders-id="foldersId"
-      :conversation-type="conversationType"
-      :show-assignee="showAssigneeInConversationCard"
-      :is-on-expanded-layout="isOnExpandedLayout"
-      @load-more="loadMoreConversations"
-    />
+      <p
+        v-if="!chatListLoading && !conversationList.length"
+        class="flex overflow-auto justify-center items-center p-4"
+      >
+        {{ $t('CHAT_LIST.LIST.404') }}
+      </p>
+      <ConversationBulkActions
+        :conversations="selectedConversations"
+        :all-conversations-selected="allConversationsSelected"
+        :selected-inboxes="uniqueInboxes"
+        :show-open-action="allSelectedConversationsStatus('open')"
+        :show-resolved-action="allSelectedConversationsStatus('resolved')"
+        :show-snoozed-action="allSelectedConversationsStatus('snoozed')"
+        :class="isOnExpandedLayout && 'sm:!w-[24rem] !w-full'"
+        @select-all-conversations="toggleSelectAll"
+      />
+      <ConversationList
+        :conversation-list="conversationList"
+        :is-loading="chatListLoading"
+        :show-end-of-list-message="showEndOfListMessage"
+        :label="label"
+        :team-id="teamId"
+        :folders-id="foldersId"
+        :conversation-type="conversationType"
+        :show-assignee="showAssigneeInConversationCard"
+        :is-on-expanded-layout="isOnExpandedLayout"
+        @load-more="loadMoreConversations"
+      />
+    </template>
     <Dialog
       ref="deleteConversationDialogRef"
       type="alert"
