@@ -133,7 +133,7 @@ useKeyboardEvents({
               sm
               ghost
               slate
-              icon="i-lucide-message-square"
+              icon="i-lucide-message-square-text"
               :title="$t('CONVERSATION.GO_TO_MESSAGE')"
               @click="onClose"
             />
