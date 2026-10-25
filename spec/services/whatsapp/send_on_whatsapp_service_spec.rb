@@ -520,21 +520,50 @@ describe Whatsapp::SendOnWhatsappService do
                                    conversation: conversation, account: conversation.account)
 
         stub_request(:post, messages_endpoint)
-          .to_return(status: 200, body: { 'messages' => [{ 'id' => 'wamid_12345' }] }.to_json,
-                     headers: { 'content-type' => 'application/json' })
+          .to_return do |_request|
+            expect(message.reload.content_attributes['dispatch_started_at']).to be_present
+            expect { Time.iso8601(message.content_attributes['dispatch_started_at']) }.not_to raise_error
+            {
+              status: 200,
+              body: { 'messages' => [{ 'id' => 'wamid_12345' }] }.to_json,
+              headers: { 'content-type' => 'application/json' }
+            }
+          end
 
         described_class.new(message: message).perform
 
         expect(a_request(:post, messages_endpoint)).to have_been_made.once
         expect(message.reload.source_id).to eq('wamid_12345')
         expect(message.content_attributes['dispatch_started_at']).to be_present
-        expect { Time.iso8601(message.content_attributes['dispatch_started_at']) }.not_to raise_error
+      end
+
+      it 'makes exactly one HTTP request when two service instances run for the same message and the second sees the marker the first wrote' do
+        message = create(:message, message_type: :outgoing, content: 'hello',
+                                   conversation: conversation, account: conversation.account)
+
+        service_one = described_class.new(message: message)
+        service_two = described_class.new(message: Message.find(message.id))
+
+        stub_request(:post, messages_endpoint)
+          .to_return do |_request|
+            service_two.perform
+            {
+              status: 200,
+              body: { 'messages' => [{ 'id' => 'wamid_12345' }] }.to_json,
+              headers: { 'content-type' => 'application/json' }
+            }
+          end
+
+        service_one.perform
+
+        expect(a_request(:post, messages_endpoint)).to have_been_made.once
+        expect(message.reload.source_id).to eq('wamid_12345')
       end
 
       it 'does not send and marks failed DISPATCH_UNKNOWN when dispatch_started_at is present and source_id is blank' do
         message = create(:message, message_type: :outgoing, content: 'hello',
                                    conversation: conversation, account: conversation.account,
-                                   content_attributes: { 'dispatch_started_at' => Time.now.utc.iso8601 },
+                                   content_attributes: { 'dispatch_started_at' => Time.current.utc.iso8601 },
                                    source_id: nil)
 
         stub_request(:post, messages_endpoint)

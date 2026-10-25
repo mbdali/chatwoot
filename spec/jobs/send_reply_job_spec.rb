@@ -154,7 +154,7 @@ RSpec.describe SendReplyJob do
     end
 
     it 'sets the marker on a message with no source_id and checks zero HTTP calls and DISPATCH_UNKNOWN' do
-      message.update_column(:content_attributes, { 'dispatch_started_at' => Time.now.utc.iso8601 })
+      message.update_column(:content_attributes, { 'dispatch_started_at' => Time.current.utc.iso8601 })
 
       stub_request(:post, messages_endpoint)
 

@@ -392,7 +392,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
                                   conversation: whatsapp_conversation,
                                   status: :failed,
                                   external_error: 'DISPATCH_NOT_SENT: Net::OpenTimeout',
-                                  content_attributes: { 'erp_outbox_id' => 'outbox_123', 'dispatch_started_at' => Time.now.utc.iso8601 })
+                                  content_attributes: { 'erp_outbox_id' => 'outbox_123', 'dispatch_started_at' => Time.current.utc.iso8601 })
 
         expect do
           post "/api/v1/accounts/#{account.id}/conversations/#{whatsapp_conversation.display_id}/messages/#{whatsapp_message.id}/retry",
@@ -411,7 +411,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
                                   conversation: whatsapp_conversation,
                                   status: :failed,
                                   external_error: 'DISPATCH_UNKNOWN: Net::ReadTimeout: timed out',
-                                  content_attributes: { 'dispatch_started_at' => Time.now.utc.iso8601 })
+                                  content_attributes: { 'dispatch_started_at' => Time.current.utc.iso8601 })
 
         expect do
           post "/api/v1/accounts/#{account.id}/conversations/#{whatsapp_conversation.display_id}/messages/#{whatsapp_message.id}/retry",
@@ -431,7 +431,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
                                   status: :failed,
                                   source_id: 'old_source_id',
                                   external_error: 'DISPATCH_NOT_SENT: Net::OpenTimeout',
-                                  content_attributes: { 'dispatch_started_at' => Time.now.utc.iso8601, 'custom_attr' => 'kept' })
+                                  content_attributes: { 'dispatch_started_at' => Time.current.utc.iso8601, 'custom_attr' => 'kept' })
 
         expect do
           post "/api/v1/accounts/#{account.id}/conversations/#{whatsapp_conversation.display_id}/messages/#{whatsapp_message.id}/retry",
@@ -454,7 +454,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
                                   status: :failed,
                                   source_id: 'old_source_id',
                                   external_error: '(#100) Param name is invalid',
-                                  content_attributes: { 'dispatch_started_at' => Time.now.utc.iso8601 })
+                                  content_attributes: { 'dispatch_started_at' => Time.current.utc.iso8601 })
 
         expect do
           post "/api/v1/accounts/#{account.id}/conversations/#{whatsapp_conversation.display_id}/messages/#{whatsapp_message.id}/retry",

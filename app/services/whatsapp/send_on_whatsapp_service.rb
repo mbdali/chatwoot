@@ -103,15 +103,20 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
   end
 
   def dispatch_to_meta
-    return if message.source_id.present?
+    dispatched = message.with_lock do
+      message.reload
+      next false if message.source_id.present?
 
-    if interrupted_dispatch?
-      handle_interrupted_dispatch
-      return
+      if dispatch_started?
+        handle_interrupted_dispatch
+        next false
+      end
+
+      mark_dispatch_started!
+      true
     end
 
-    mark_dispatch_started!
-    yield
+    yield if dispatched
   end
 
   def interrupted_dispatch?
@@ -127,7 +132,7 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
   end
 
   def mark_dispatch_started!
-    attrs = (message.content_attributes&.deep_dup || {}).merge('dispatch_started_at' => Time.now.utc.iso8601)
+    attrs = (message.content_attributes&.deep_dup || {}).merge('dispatch_started_at' => Time.current.utc.iso8601)
     # rubocop:disable Rails/SkipsModelValidations
     message.update_columns(content_attributes: attrs)
     # rubocop:enable Rails/SkipsModelValidations
