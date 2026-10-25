@@ -85,14 +85,13 @@ useKeyboardEvents({
 
           <!-- Actions -->
           <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Go back to message in conversation -->
+            <!-- React Action (Emoji reaction) -->
             <NextButton
               sm
               ghost
               slate
-              icon="i-lucide-message-square"
-              :title="$t('CONVERSATION.GO_TO_MESSAGE')"
-              @click="onClose"
+              icon="i-lucide-smile-plus"
+              :title="$t('CONVERSATION.REACT')"
             />
             <!-- Dummy Star Action -->
             <NextButton
@@ -128,6 +127,15 @@ useKeyboardEvents({
               :disabled="isDownloading"
               :title="$t('CONVERSATION.DOWNLOAD')"
               @click="onDownload"
+            />
+            <!-- Go back to message in conversation -->
+            <NextButton
+              sm
+              ghost
+              slate
+              icon="i-lucide-message-square"
+              :title="$t('CONVERSATION.GO_TO_MESSAGE')"
+              @click="onClose"
             />
             <!-- Close Modal Action -->
             <NextButton
