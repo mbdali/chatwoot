@@ -502,5 +502,100 @@ describe Whatsapp::SendOnWhatsappService do
         described_class.new(message: message_b).perform
       end
     end
+
+    context 'when dispatch marker and error classification are evaluated' do
+      let!(:whatsapp_channel) { create(:channel_whatsapp, sync_templates: false) }
+      let!(:contact_inbox) { create(:contact_inbox, inbox: whatsapp_channel.inbox, source_id: '123456789') }
+      let!(:conversation) { create(:conversation, contact_inbox: contact_inbox, inbox: whatsapp_channel.inbox) }
+      let(:messages_endpoint) { 'https://waba.360dialog.io/v1/messages' }
+
+      before do
+        stub_request(:post, 'https://waba.360dialog.io/v1/configs/webhook')
+        create(:message, message_type: :incoming, content: 'incoming message',
+                         conversation: conversation, account: conversation.account)
+      end
+
+      it 'saves dispatch_started_at in UTC ISO-8601 into content_attributes before calling Meta' do
+        message = create(:message, message_type: :outgoing, content: 'hello',
+                                   conversation: conversation, account: conversation.account)
+
+        stub_request(:post, messages_endpoint)
+          .to_return(status: 200, body: { 'messages' => [{ 'id' => '123456789' }] }.to_json,
+                     headers: { 'content-type' => 'application/json' })
+
+        described_class.new(message: message).perform
+
+        expect(message.reload.source_id).to eq('123456789')
+        expect(message.content_attributes['dispatch_started_at']).to be_present
+        expect { Time.iso8601(message.content_attributes['dispatch_started_at']) }.not_to raise_error
+      end
+
+      it 'does not send and marks failed DISPATCH_UNKNOWN when dispatch_started_at is present and source_id is blank' do
+        message = create(:message, message_type: :outgoing, content: 'hello',
+                                   conversation: conversation, account: conversation.account,
+                                   content_attributes: { 'dispatch_started_at' => Time.now.utc.iso8601 },
+                                   source_id: nil)
+
+        stub_request(:post, messages_endpoint)
+
+        described_class.new(message: message).perform
+
+        expect(a_request(:post, messages_endpoint)).not_to have_been_made
+        expect(message.reload.status).to eq('failed')
+        expect(message.reload.external_error).to eq('DISPATCH_UNKNOWN: interrupted dispatch')
+      end
+
+      it 'does not mark failed if message.source_id is already present' do
+        message = create(:message, message_type: :outgoing, content: 'hello',
+                                   conversation: conversation, account: conversation.account,
+                                   source_id: 'existing_id')
+
+        stub_request(:post, messages_endpoint)
+
+        described_class.new(message: message).perform
+
+        expect(a_request(:post, messages_endpoint)).not_to have_been_made
+        expect(message.reload.status).not_to eq('failed')
+      end
+
+      [
+        Net::OpenTimeout,
+        Errno::ECONNREFUSED,
+        SocketError,
+        Net::ReadTimeout,
+        Errno::ECONNRESET,
+        Timeout::Error,
+        StandardError
+      ].each do |exception_class|
+        it "classifies exception after marker as DISPATCH_UNKNOWN for #{exception_class}" do
+          message = create(:message, message_type: :outgoing, content: 'hello',
+                                     conversation: conversation, account: conversation.account)
+
+          stub_request(:post, messages_endpoint).to_raise(exception_class.new('meta connection failure'))
+
+          described_class.new(message: message).perform
+
+          expect(a_request(:post, messages_endpoint)).to have_been_made.once
+          expect(message.reload.status).to eq('failed')
+          expect(message.reload.external_error).to start_with("DISPATCH_UNKNOWN: #{exception_class}:")
+          expect(message.reload.content_attributes['dispatch_started_at']).to be_present
+        end
+
+        it "classifies exception before marker as DISPATCH_NOT_SENT for #{exception_class}" do
+          message = create(:message, message_type: :outgoing, content: 'hello',
+                                     conversation: conversation, account: conversation.account)
+
+          stub_request(:post, messages_endpoint)
+          allow(conversation).to receive(:can_reply?).and_raise(exception_class.new('pre-dispatch validation failure'))
+
+          described_class.new(message: message).perform
+
+          expect(a_request(:post, messages_endpoint)).not_to have_been_made
+          expect(message.reload.status).to eq('failed')
+          expect(message.reload.external_error).to eq("DISPATCH_NOT_SENT: #{exception_class}")
+          expect(message.reload.content_attributes['dispatch_started_at']).to be_blank
+        end
+      end
+    end
   end
 end

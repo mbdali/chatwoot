@@ -323,11 +323,13 @@ Meta’s WhatsApp Cloud API requires an HTTPS URL to fetch the PDF header for te
 Raqmi Connect has built-in protections against duplicate message dispatches:
 1. **`source_id` Check**: If a message already has a `source_id` assigned by Meta, no dispatch is attempted.
 2. **No Sidekiq Retries**: Under any network exception or API failure, Sidekiq will **never retry** the dispatch.
-3. **Exception Categorization**:
-   - **Connection never opened** (`Net::OpenTimeout`, `Errno::ECONNREFUSED`, `SocketError`):  
+3. **Dispatch Marker & Exception Categorization**:
+   - Before making an HTTP call to Meta, a `dispatch_started_at` timestamp (UTC ISO-8601) is committed to `content_attributes`.
+   - Any exception occurring **before** the marker was committed:  
      Status is set to `failed` with `external_error: "DISPATCH_NOT_SENT: <class>"`.
-   - **Timeout or error after handshake** (`Net::ReadTimeout`, `Errno::ECONNRESET`, `Timeout::Error`):  
+   - Any exception occurring **after** the marker was committed:  
      Status is set to `failed` with `external_error: "DISPATCH_UNKNOWN: <class>: <message>"`.
+   - If a dispatch attempt encounters an existing `dispatch_started_at` marker and a blank `source_id`, the message is not resent and is marked `failed` with `external_error: "DISPATCH_UNKNOWN: interrupted dispatch"`.
 
 ### Meta Billing Guarantee for Failed Messages
 * **Meta WhatsApp Cloud API charges only upon successful delivery (`status: delivered`)**.

@@ -1,20 +1,26 @@
 class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
-  CONNECTION_ERRORS = [Net::OpenTimeout, Errno::ECONNREFUSED, SocketError].freeze
-
   def perform
     return if message.source_id.present?
 
     super
-  rescue *CONNECTION_ERRORS => e
-    handle_dispatch_error("DISPATCH_NOT_SENT: #{e.class}")
   rescue StandardError, Timeout::Error => e
-    handle_dispatch_error("DISPATCH_UNKNOWN: #{e.class}: #{e.message}")
+    handle_dispatch_error(e)
   end
 
   private
 
-  def handle_dispatch_error(error_message)
+  def handle_dispatch_error(error)
     return if message.source_id.present?
+
+    error_message = if error.is_a?(Exception)
+                      if dispatch_started?
+                        "DISPATCH_UNKNOWN: #{error.class}: #{error.message}"
+                      else
+                        "DISPATCH_NOT_SENT: #{error.class}"
+                      end
+                    else
+                      error.to_s
+                    end
 
     message.update!(status: :failed, external_error: error_message)
   end
@@ -25,6 +31,8 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
 
   def perform_reply
     return if message.source_id.present?
+    return handle_interrupted_dispatch if interrupted_dispatch?
+
     if template_params.present?
       tag_contact_info_template_request
       return send_template_message
@@ -42,8 +50,11 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
     Whatsapp::ContactInfoRequestEligibilityService.new(
       conversation: message.conversation, message: message, delivery_mode: :interactive
     ).ensure_available!
-    message_id = channel.send_contact_info_request(message.conversation.contact_inbox.source_id, message)
-    message.update!(source_id: message_id) if message_id.present?
+
+    dispatch_to_meta do
+      message_id = channel.send_contact_info_request(message.conversation.contact_inbox.source_id, message)
+      message.update!(source_id: message_id) if message_id.present?
+    end
   end
 
   def send_template_message
@@ -60,18 +71,52 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
       return
     end
 
-    message_id = channel.send_template(message.conversation.contact_inbox.source_id, {
-                                         name: name,
-                                         namespace: namespace,
-                                         lang_code: lang_code,
-                                         parameters: processed_parameters
-                                       }, message)
-    message.update!(source_id: message_id) if message_id.present?
+    dispatch_to_meta do
+      message_id = channel.send_template(message.conversation.contact_inbox.source_id, {
+                                           name: name,
+                                           namespace: namespace,
+                                           lang_code: lang_code,
+                                           parameters: processed_parameters
+                                         }, message)
+      message.update!(source_id: message_id) if message_id.present?
+    end
   end
 
   def send_session_message
-    message_id = channel.send_message(message.conversation.contact_inbox.source_id, message)
-    message.update!(source_id: message_id) if message_id.present?
+    dispatch_to_meta do
+      message_id = channel.send_message(message.conversation.contact_inbox.source_id, message)
+      message.update!(source_id: message_id) if message_id.present?
+    end
+  end
+
+  def dispatch_to_meta
+    return if message.source_id.present?
+
+    if interrupted_dispatch?
+      handle_interrupted_dispatch
+      return
+    end
+
+    mark_dispatch_started!
+    yield
+  end
+
+  def interrupted_dispatch?
+    dispatch_started? && message.source_id.blank?
+  end
+
+  def dispatch_started?
+    (message.content_attributes&.[]('dispatch_started_at') || message.content_attributes&.[](:dispatch_started_at)).present?
+  end
+
+  def handle_interrupted_dispatch
+    message.update!(status: :failed, external_error: 'DISPATCH_UNKNOWN: interrupted dispatch')
+  end
+
+  def mark_dispatch_started!
+    attrs = (message.content_attributes&.deep_dup || {}).merge('dispatch_started_at' => Time.now.utc.iso8601)
+    message.update_column(:content_attributes, attrs)
+    message.content_attributes = attrs
   end
 
   def template_params
@@ -79,7 +124,7 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
   end
 
   def contact_info_request?
-    message.content_attributes.dig('whatsapp_contact_info', 'type') == 'request'
+    message.content_attributes&.dig('whatsapp_contact_info', 'type') == 'request'
   end
 
   def tag_contact_info_template_request

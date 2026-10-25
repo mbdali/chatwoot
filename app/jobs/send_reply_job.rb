@@ -1,16 +1,8 @@
 class SendReplyJob < ApplicationJob
   queue_as :high
 
-  CONNECTION_NOT_SENT_ERRORS = [Net::OpenTimeout, Errno::ECONNREFUSED, SocketError].freeze
-
-  # ActiveJob evaluates rescue/discard handlers in reverse declaration order (last declared runs first).
-  # Declare StandardError first, specific classes after.
   discard_on StandardError do |job, error|
-    job.send(:handle_whatsapp_failure, error, "DISPATCH_UNKNOWN: #{error.class}: #{error.message}")
-  end
-
-  discard_on(*CONNECTION_NOT_SENT_ERRORS) do |job, error|
-    job.send(:handle_whatsapp_failure, error, "DISPATCH_NOT_SENT: #{error.class}")
+    job.send(:handle_whatsapp_failure, error)
   end
 
   CHANNEL_SERVICES = {
@@ -46,13 +38,18 @@ class SendReplyJob < ApplicationJob
 
   private
 
-  def handle_whatsapp_failure(error, fallback_error)
+  def handle_whatsapp_failure(error)
     message = resolve_message
     return unless message
     return if message.source_id.present?
 
     if whatsapp_message?(message)
-      message.update!(status: :failed, external_error: fallback_error)
+      error_message = if (message.content_attributes&.[]('dispatch_started_at') || message.content_attributes&.[](:dispatch_started_at)).present?
+                        "DISPATCH_UNKNOWN: #{error.class}: #{error.message}"
+                      else
+                        "DISPATCH_NOT_SENT: #{error.class}"
+                      end
+      message.update!(status: :failed, external_error: error_message)
     else
       raise error
     end
