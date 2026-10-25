@@ -144,7 +144,7 @@ useKeyboardEvents({
               slate
               icon="i-lucide-x"
               class="ml-1"
-              :title="$t('MODAL.CLOSE') || 'Close'"
+              :title="$t('GENERAL.CLOSE')"
               @click="onClose"
             />
           </div>
