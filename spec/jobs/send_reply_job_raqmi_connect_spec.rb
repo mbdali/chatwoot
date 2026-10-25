@@ -16,6 +16,7 @@ RSpec.describe SendReplyJob do
       stub_request(:post, "https://graph.facebook.com/v14.0/#{whatsapp_channel.provider_config['business_account_id']}/message_templates")
       create(:message, message_type: :incoming, content: 'incoming message',
                        conversation: conversation, account: conversation.account)
+      message
     end
 
     it 'runs SendReplyJob twice for one message and makes exactly one HTTP call on success path' do
@@ -87,7 +88,10 @@ RSpec.describe SendReplyJob do
 
     it 'stubs exception before the marker and checks DISPATCH_NOT_SENT prefix, zero HTTP calls and no re-enqueue' do
       stub_request(:post, messages_endpoint)
-      allow(conversation).to receive(:can_reply?).and_raise(StandardError.new('pre-dispatch failed'))
+      # The job must see this message's conversation: Enterprise prepends can_reply?, so any_instance cannot stub it.
+      allow(Message).to receive(:find).and_call_original
+      allow(Message).to receive(:find).with(message.id).and_return(message)
+      allow(message.conversation).to receive(:can_reply?).and_raise(StandardError.new('pre-dispatch failed'))
 
       expect do
         described_class.perform_now(message.id)
@@ -120,8 +124,8 @@ RSpec.describe SendReplyJob do
         .to_return(status: 200, body: { 'messages' => [{ 'id' => 'wamid_12345' }] }.to_json,
                    headers: { 'content-type' => 'application/json' })
 
-      allow(Message).to receive(:find_by).and_call_original
-      allow(Message).to receive(:find_by).with(id: message.id).and_return(message)
+      allow(Message).to receive(:find).and_call_original
+      allow(Message).to receive(:find).with(message.id).and_return(message)
       allow(message).to receive(:update!).and_call_original
       allow(message).to receive(:update!).with(source_id: 'wamid_12345').and_raise(ActiveRecord::StatementInvalid.new('DB failure'))
 

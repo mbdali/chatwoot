@@ -21,28 +21,36 @@ module RaqmiConnect::WhatsappDispatchMarker
 
   private
 
+  # Locks a fresh copy of the row, never the caller's object: upstream mutates the message in memory before
+  # it gets here (TemplateParameterConverterService rewrites additional_attributes for legacy params), and
+  # Rails refuses to lock a record with unsaved changes.
   def guard_dispatch(message)
     return yield unless message.is_a?(Message) && message.persisted?
 
-    proceed = message.with_lock do
-      next false if message.source_id.present?
+    stamp = Message.transaction do
+      row = Message.lock.find(message.id)
+      next if row.source_id.present?
 
-      if RaqmiConnect::WhatsappDispatch.started?(message)
-        RaqmiConnect::WhatsappDispatch.mark_interrupted!(message)
-        next false
+      if RaqmiConnect::WhatsappDispatch.started?(row)
+        RaqmiConnect::WhatsappDispatch.mark_interrupted!(row)
+        next
       end
 
-      mark_dispatch_started(message)
-      true
+      mark_dispatch_started(row)
     end
+    return if stamp.nil?
 
-    yield if proceed
+    # The caller classifies a failure by the marker, so its copy must carry it too.
+    message.content_attributes[RaqmiConnect::WhatsappDispatch::MARKER] = stamp
+    yield
   end
 
-  def mark_dispatch_started(message)
-    attrs = (message.content_attributes || {}).deep_dup
-    attrs[RaqmiConnect::WhatsappDispatch::MARKER] = Time.current.utc.iso8601
+  def mark_dispatch_started(row)
+    stamp = Time.current.utc.iso8601
+    attrs = (row.content_attributes || {}).deep_dup
+    attrs[RaqmiConnect::WhatsappDispatch::MARKER] = stamp
     # No callbacks: no extra broadcast or webhook for a bookkeeping write.
-    message.update_columns(content_attributes: attrs) # rubocop:disable Rails/SkipsModelValidations
+    row.update_columns(content_attributes: attrs) # rubocop:disable Rails/SkipsModelValidations
+    stamp
   end
 end

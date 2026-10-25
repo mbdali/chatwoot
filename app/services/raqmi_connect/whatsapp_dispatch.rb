@@ -36,12 +36,15 @@ module RaqmiConnect::WhatsappDispatch
 
   # A dispatch that raised: connection errors are NOT_SENT (and lose the marker, so a retry may send);
   # anything else is NOT_SENT before the marker and UNKNOWN after it.
+  # ⚠ external_error is a store accessor inside content_attributes (Message): writing both in one update loses
+  # the error to the hash. So the error goes into the hash that is written.
   def record_failure!(message, error)
     return if message.source_id.present?
 
     if connection_error?(error)
-      message.update!(status: :failed, external_error: "#{NOT_SENT} #{error.class}",
-                      content_attributes: attributes_without_marker(message))
+      attrs = attributes_without_marker(message)
+      attrs['external_error'] = "#{NOT_SENT} #{error.class}"
+      message.update!(status: :failed, content_attributes: attrs)
     elsif started?(message)
       message.update!(status: :failed, external_error: "#{UNKNOWN} #{error.class}: #{error.message}")
     else
