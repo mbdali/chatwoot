@@ -20,6 +20,7 @@ services:
       - "6379:6379"
 
   base: &base
+    image: raqmilabs/raqmi-connect:v4.19.1-custom
     # Build your local fork with custom branding and Vue/Tailwind tweaks
     build:
       context: .

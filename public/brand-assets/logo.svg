@@ -1,30 +1,19 @@
 <svg width="2400" height="540" viewBox="0 0 2400 540" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="raqmi-grad-light" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF5A09"/>
-      <stop offset="50%" stop-color="#EC7F37"/>
-      <stop offset="100%" stop-color="#BE4F0C"/>
-    </linearGradient>
     <filter id="shadow-light" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#BE4F0C" flood-opacity="0.25"/>
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#1B5E20" flood-opacity="0.25"/>
     </filter>
   </defs>
 
-  <!-- Left Emblem -->
-  <g transform="translate(20, 20)">
-    <rect width="500" height="500" rx="120" fill="url(#raqmi-grad-light)" filter="url(#shadow-light)"/>
-    <path d="M130 130H370M130 250H370M130 370H370M130 130V370M250 130V370M370 130V370"
-          stroke="#FFFFFF" stroke-width="7" stroke-opacity="0.2" stroke-linecap="round"/>
-    <path d="M170 160V340M170 160H265C300 160 330 180 330 215C330 250 300 270 265 270H170M265 270L330 340"
-          stroke="#FFFFFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="360" cy="160" r="16" fill="#FFFFFF"/>
-    <circle cx="390" cy="190" r="14" fill="#FFFFFF" fill-opacity="0.8"/>
-    <circle cx="360" cy="340" r="14" fill="#FFFFFF" fill-opacity="0.6"/>
+  <!-- Left Official Raqmi Connect Emblem -->
+  <g transform="translate(20, 20) scale(1.16279)" filter="url(#shadow-light)">
+    <path d="M88 1 L342 1 C390.049 1 429 39.951 429 88 L429 342 C429 390.049 390.049 429 342 429 L88 429 C39.951 429 1 390.049 1 342 L1 88 C1 39.951 39.951 1 88 1 Z" fill="#ffffff"/>
+    <path d="M0 88 C0 39.399 39.399 0 88 0 L299.87 0 C324.502 21.717 333.406 56.371 322.132 87.355 C310.635 118.953 280.605 139.989 246.98 140 L122.185 140.039 L325.157 430 L88 430 C39.399 430 0 390.601 0 342 Z M346.565 96.245 C358.465 63.542 353.399 27.752 334.346 0 L342 0 C350.39 0 358.506 1.174 366.193 3.367 C381.025 34.618 383.342 71.21 370.998 105.136 C352.027 157.273 302.478 191.983 246.996 192 L222.037 192.008 L381.937 420.437 C373.954 424.509 365.267 427.399 356.107 428.875 L172.111 166.024 L246.988 166 C291.541 165.986 331.331 138.113 346.565 96.245 Z M395.431 114.026 C406.413 83.843 407.701 51.897 400.347 22.123 C416.947 36.836 427.946 57.727 429.741 81.194 C428.112 95.232 424.843 109.23 419.863 122.916 C401.327 173.859 361.848 212.865 313.259 231.647 L419.592 383.552 C415.243 391.655 409.663 398.998 403.1 405.331 L270.715 216.21 C327.213 207.634 375.467 168.892 395.431 114.026 Z M352.093 241.787 C384.278 223.165 411.367 196.101 430 162.948 L430 342 C430 345.464 429.8 348.881 429.411 352.24 Z" fill="#2e7d32"/>
   </g>
 
   <!-- Wordmark -->
   <text x="600" y="345" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="190" letter-spacing="-3">
-    <tspan fill="#111827">Raqmi </tspan><tspan fill="#FF5A09">Connect</tspan>
+    <tspan fill="#09090B">Raqmi </tspan><tspan fill="#2E7D32">Connect</tspan>
   </text>
   <text x="610" y="425" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="44" fill="#6B7280" letter-spacing="8">POWERED BY RAQMI LABS</text>
 </svg>

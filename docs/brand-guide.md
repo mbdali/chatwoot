@@ -11,6 +11,7 @@ This document outlines the brand assets, color palette, typography, white-label 
 - **Product / Application Name**: `Raqmi Connect`
 - **Parent Company**: `Raqmi Labs`
 - **Official Website**: [https://raqmilabs.com](https://raqmilabs.com)
+- **Official Brand Assets Repository**: [https://github.com/mbdali/raqmilabs-brand-assets](https://github.com/mbdali/raqmilabs-brand-assets) (`products/raqmi-connect/`)
 - **Tagline**: Premier Customer Engagement & Communication Platform
 - **Support & Sales Contact**: `sales@raqmilabs.com`
 - **Terms of Service**: `https://raqmilabs.com/terms`
@@ -20,45 +21,58 @@ This document outlines the brand assets, color palette, typography, white-label 
 
 ## 2. Color System & Design Tokens
 
-Raqmi Connect features a vibrant, high-energy orange palette derived from the Raqmi Labs visual identity, balanced with modern slate neutrals for maximum legibility in both light and dark themes.
+Raqmi Connect utilizes the official **RaqmiConnect Green** product palette (`#2E7D32`), balanced with modern Zinc/Slate neutrals for high contrast and accessibility (passes WCAG AA 5.1:1 on white text).
 
 ### 2.1 Core Palette
 
 | Token | Hex Code | RGB | Usage |
 |---|---|---|---|
-| **Primary Brand** | `#FF5A09` | `255, 90, 9` | Main CTA buttons, active tabs, focus rings, brand badges, links |
-| **Accent / Gradient Mid** | `#EC7F37` | `236, 127, 55` | Gradients, hover states, secondary accents |
-| **Dark Accent / Shadow** | `#BE4F0C` | `190, 79, 12` | Gradient shadows, pressed button states |
-| **Dark Mode Primary** | `#FF6E26` | `255, 110, 38` | High-contrast brand elements on dark backgrounds |
-| **Neutral Dark** | `#393939` | `57, 57, 57` | Headers, primary body text in light mode |
+| **Primary Brand** | `#2E7D32` | `46, 125, 50` | Main CTA buttons, active tabs, focus rings, brand badges, links |
+| **Hover / Text Buttons** | `#1B5E20` | `27, 94, 32` | Button hover states, active pressed states |
+| **Light Tint** | `#E8F5E9` | `232, 245, 233` | Badges, subtle active item backgrounds, tint highlights |
+| **Dark Mode Primary** | `#4CAF50` | `76, 175, 80` | High-contrast accent elements on dark backgrounds |
+| **Mark Zinc Black** | `#09090B` | `9, 9, 11` | Primary text and dark logos (matches RaqmiERP) |
 | **Neutral Slate** | `#111827` | `17, 24, 39` | High-contrast typography |
 
-### 2.2 Gradient Specifications
+### 2.2 Brand Green Palette Scale
 
-The official Raqmi Connect brand gradient is linear at a 135° diagonal:
-```css
-background: linear-gradient(135deg, #FF5A09 0%, #EC7F37 50%, #BE4F0C 100%);
+```javascript
+brand: {
+  DEFAULT: '#2E7D32',
+  50: '#e8f5e9',
+  100: '#c8e6c9',
+  200: '#a5d6a7',
+  300: '#81c784',
+  400: '#66bb6a',
+  500: '#2E7D32',
+  600: '#276c2b',
+  700: '#1b5e20',
+  800: '#144618',
+  900: '#0d3010',
+}
 ```
 
 ### 2.3 Tailwind & CSS Token Mapping
 
-The color palette is modularly mapped without modifying core Vue components:
+The color palette is modularly mapped without modifying core upstream Vue components:
 
-- **Tailwind Token (`n.brand`)**: Mapped to `var(--brand-color, #FF5A09)` in `theme/brand-colors.js`.
-- **Legacy Tokens (`woot-500` .. `woot-700`)**: Remapped to the brand orange palette.
+- **Tailwind Token (`n.brand`)**: Mapped to `#2E7D32` in `theme/brand-colors.js`.
+- **Legacy Tokens (`woot-500` .. `woot-700`)**: Remapped to the Raqmi Connect green palette.
 - **CSS Custom Properties** (defined in `app/javascript/dashboard/assets/scss/custom-brand.scss`):
   ```scss
   :root {
-    --brand-color: #FF5A09;
-    --brand-color-accent: #EC7F37;
-    --brand-color-dark: #BE4F0C;
-    --brand-color-rgb: 255, 90, 9;
+    --brand-color: #2E7D32;
+    --brand-color-accent: #388E3C;
+    --brand-color-dark: #1B5E20;
+    --brand-color-rgb: 46, 125, 50;
   }
 
-  [data-theme='dark'] {
-    --brand-color: #FF6E26;
-    --brand-color-accent: #FF8544;
-    --brand-color-dark: #EC7F37;
+  [data-theme='dark'],
+  .dark {
+    --brand-color: #4CAF50;
+    --brand-color-accent: #66BB6A;
+    --brand-color-dark: #388E3C;
+    --brand-color-rgb: 76, 175, 80;
   }
   ```
 
@@ -66,36 +80,41 @@ The color palette is modularly mapped without modifying core Vue components:
 
 ## 3. Logo & Visual Assets
 
-All brand visual assets are stored in the dedicated, isolated directory:
+All official brand visual assets are stored in `public/custom-brand/` and mirrored in `public/brand-assets/`:
 ```
 public/custom-brand/
-├── logo.svg              # Primary logo for light backgrounds
-├── logo_dark.svg         # Primary logo for dark backgrounds
-├── logo_thumbnail.svg    # Square app icon & collapsed sidebar emblem (512x512)
-└── favicon.svg           # High-resolution vector browser favicon
+├── logo.svg              # Primary horizontal lockup for light backgrounds
+├── logo_dark.svg         # Primary horizontal lockup for dark backgrounds
+├── logo_thumbnail.svg    # Official Raqmi Connect squircle emblem (512x512)
+├── logo.png              # Raster logo fallback
+├── logo-thumbnail.png    # Raster square thumbnail fallback
+├── favicon.svg           # Vector browser favicon
+├── favicon.ico           # Multi-resolution ICO (16x16, 32x32, 48x48)
+├── favicon-16x16.png     # 16px raster favicon
+└── favicon-32x32.png     # 32px raster favicon
 ```
 
 ### 3.1 Emblem Anatomy
-The Raqmi icon blends technology and communication:
-1. **Background**: Rounded squircle (`rx="112"`) with the 3-stop Raqmi gradient.
-2. **Circuit Matrix**: Subtle white grid lines (`stroke-opacity="0.18"`) evoking modern software architecture.
-3. **Stylized 'R'**: Bold, continuous path symbolizing connectivity and rapid routing.
-4. **Circuit Accent Nodes**: Three satellite dots representing data synchronization and messaging endpoints.
+The official Raqmi Connect icon from `raqmilabs-brand-assets/products/raqmi-connect/`:
+1. **Background Tile**: Rounded squircle (`fill="#2E7D32"`) providing high contrast.
+2. **Cutout Matrix**: Solid white lines cutting through the tile, forming the signature stylized Raqmi identity.
+3. **Universality**: Works cleanly on light and dark backgrounds without modification.
 
 ### 3.2 Asset Usage Guidelines
 
 | Context | Recommended Asset | Notes |
 |---|---|---|
-| **Login / Onboarding** | `logo.svg` / `logo_dark.svg` | Displayed above the authentication forms |
+| **Login / Onboarding** | `logo.svg` / `logo_dark.svg` | Displayed above authentication forms |
 | **Dashboard Top Nav / Sidebar** | `logo_thumbnail.svg` | 32x32px or 40x40px square emblem |
-| **Browser Tab** | `favicon.svg` | Scales sharply down to 16x16px |
+| **Browser Tab** | `favicon.svg` / `favicon.ico` | Scales sharply down to 16x16px |
+| **Notification Badges** | `favicon-badge-*.png` | Displays red unread alert dot on top right |
 | **Widget Header** | `logo_thumbnail.svg` | Displayed in visitor chat bubble and launcher |
 
 ---
 
 ## 4. White-Label Environment Configuration
 
-The following variables in `.env` govern all user-facing names and links:
+The following variables in `.env` govern user-facing names and links:
 
 ```bash
 # ==========================================
