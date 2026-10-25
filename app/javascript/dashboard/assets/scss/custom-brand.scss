@@ -1,16 +1,17 @@
-// Custom Branding CSS Variables for Raqmi Connect
+// Custom Branding CSS Variables
 :root {
-  --brand-color: #FF5A09;
-  --brand-color-accent: #ec7f37;
-  --brand-color-dark: #be4f0c;
-  --brand-color-rgb: 255, 90, 9;
+  --brand-color: #2E7D32;
+  --brand-color-accent: #388E3C;
+  --brand-color-dark: #1B5E20;
+  --brand-color-rgb: 46, 125, 50;
 }
 
-[data-theme='dark'] {
-  --brand-color: #ff6e26;
-  --brand-color-accent: #ff8544;
-  --brand-color-dark: #ec7f37;
-  --brand-color-rgb: 255, 110, 38;
+[data-theme='dark'],
+.dark {
+  --brand-color: #4CAF50;
+  --brand-color-accent: #66BB6A;
+  --brand-color-dark: #388E3C;
+  --brand-color-rgb: 76, 175, 80;
 }
 
 // Brand utility classes

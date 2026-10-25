@@ -15,6 +15,15 @@
 // Base styles for elements
 @import 'base';
 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 // Plugins
 @import 'plugins/date-picker';
 
