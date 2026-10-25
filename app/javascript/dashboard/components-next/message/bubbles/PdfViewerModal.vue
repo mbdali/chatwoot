@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import NextButton from 'next/button/Button.vue';
 import TeleportWithDirection from 'next/TeleportWithDirection.vue';
 import { downloadFile } from '@chatwoot/utils';
@@ -13,6 +14,7 @@ const props = defineProps({
 
 const show = defineModel('show', { type: Boolean, default: false });
 const emit = defineEmits(['close']);
+const isDownloading = ref(false);
 
 const onClose = () => {
   show.value = false;
@@ -21,14 +23,13 @@ const onClose = () => {
 
 const onDownload = async () => {
   try {
+    isDownloading.value = true;
     await downloadFile({ url: props.url, type: 'file', extension: 'pdf' });
   } catch (e) {
     window.open(props.url, '_blank');
+  } finally {
+    isDownloading.value = false;
   }
-};
-
-const onOpenExternal = () => {
-  window.open(props.url, '_blank', 'noopener,noreferrer');
 };
 
 useKeyboardEvents({
@@ -83,29 +84,59 @@ useKeyboardEvents({
           </div>
 
           <!-- Actions -->
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 sm:gap-2">
+            <!-- Go back to message in conversation -->
             <NextButton
               sm
-              outline
+              ghost
               slate
-              icon="i-lucide-external-link"
-              :label="$t('CONVERSATION.OPEN_IN_NEW_TAB') || 'Open in new tab'"
-              @click="onOpenExternal"
+              icon="i-lucide-message-square"
+              :title="$t('CONVERSATION.GO_TO_MESSAGE')"
+              @click="onClose"
             />
+            <!-- Dummy Star Action -->
             <NextButton
               sm
-              solid
+              ghost
+              slate
+              icon="i-lucide-star"
+              :title="$t('CONVERSATION.STAR')"
+            />
+            <!-- Dummy Pin Action -->
+            <NextButton
+              sm
+              ghost
+              slate
+              icon="i-lucide-pin"
+              :title="$t('CONVERSATION.PIN')"
+            />
+            <!-- Dummy Forward Action -->
+            <NextButton
+              sm
+              ghost
+              slate
+              icon="i-lucide-forward"
+              :title="$t('CONVERSATION.FORWARD')"
+            />
+            <!-- Direct Download Action (Icon only) -->
+            <NextButton
+              sm
+              ghost
               slate
               icon="i-lucide-download"
-              :label="$t('CONVERSATION.DOWNLOAD')"
+              :is-loading="isDownloading"
+              :disabled="isDownloading"
+              :title="$t('CONVERSATION.DOWNLOAD')"
               @click="onDownload"
             />
+            <!-- Close Modal Action -->
             <NextButton
               sm
               ghost
               slate
               icon="i-lucide-x"
-              class="ml-2"
+              class="ml-1"
+              :title="$t('MODAL.CLOSE') || 'Close'"
               @click="onClose"
             />
           </div>
