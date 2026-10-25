@@ -319,22 +319,32 @@ Meta’s WhatsApp Cloud API requires an HTTPS URL to fetch the PDF header for te
 
 ## 5. Delivery Tracking, Error Handling & Anti-Duplicate Safety
 
-### `SendReplyJob` Non-Retrying Guarantee
+### `SendReplyJob` Non-Retrying Guarantee & Dispatch Safety
 Raqmi Connect has built-in protections against duplicate message dispatches:
 1. **`source_id` Check**: If a message already has a `source_id` assigned by Meta, no dispatch is attempted.
-2. **No Sidekiq Retries**: Under any network exception or API failure, Sidekiq will **never retry** the dispatch.
-3. **Dispatch Marker & Exception Categorization**:
-   - Before making an HTTP call to Meta, a `dispatch_started_at` timestamp (UTC ISO-8601) is committed to `content_attributes`.
-   - Any exception occurring **before** the marker was committed:  
-     Status is set to `failed` with `external_error: "DISPATCH_NOT_SENT: <class>"`.
-   - Any exception occurring **after** the marker was committed:  
-     Status is set to `failed` with `external_error: "DISPATCH_UNKNOWN: <class>: <message>"`.
-   - If a dispatch attempt encounters an existing `dispatch_started_at` marker and a blank `source_id`, the message is not resent and is marked `failed` with `external_error: "DISPATCH_UNKNOWN: interrupted dispatch"`.
+2. **No Sidekiq Retries**: Under any network exception or API failure, Sidekiq will **never retry** the dispatch for WhatsApp messages.
+3. **Dispatch Marker (`dispatch_started_at`)**:
+   - Immediately before each HTTP call to Meta (`send_template`, `send_message`, `send_contact_info_request`), a UTC ISO-8601 timestamp is committed directly to `message.content_attributes['dispatch_started_at']`.
+   - The write skips model callbacks and runs outside any wrapping transaction so it commits immediately.
+   - If a job run finds `source_id` blank and `dispatch_started_at` present on entry, dispatch is blocked and the message is marked `failed` with `external_error: "DISPATCH_UNKNOWN: interrupted dispatch"`.
+4. **Error Classification & Exact Prefixes**:
+   - **Connection Never Opened** (`Net::OpenTimeout`, `Errno::ECONNREFUSED`, `SocketError`):  
+     Status is set to `failed` with `external_error: "DISPATCH_NOT_SENT: <class>"`. Since nothing reached Meta even if the marker was written, `dispatch_started_at` is removed in the same write.
+   - **Pre-Dispatch Failure** (any other error when marker is ABSENT, e.g. template lookup failure or eligibility error):  
+     Status is set to `failed` with `external_error: "DISPATCH_NOT_SENT: <class>: <message>"`.
+   - **Post-Handshake Error / Unknown Dispatch** (any error when marker is PRESENT, e.g. `Net::ReadTimeout`, `Errno::ECONNRESET`, `Timeout::Error`):  
+     Status is set to `failed` with `external_error: "DISPATCH_UNKNOWN: <class>: <message>"`. The marker is retained.
+   - **Meta Server Errors (HTTP 5xx)**:  
+     Recorded as `external_error: "DISPATCH_UNKNOWN: HTTP <code>"`.
+5. **Dashboard Retry Rules**:
+   - **ERP Messages**: A message whose `content_attributes` has `erp_outbox_id` is **never retried** from the dashboard. The UI returns: *"This message was sent by the ERP. Resend it from the ERP."* The ERP exclusively owns resends (caps, rate limits, reason, audit).
+   - **Unknown Outcomes**: A message whose `external_error` starts with `"DISPATCH_UNKNOWN:"` is **never retried** from the dashboard (the message may already have been delivered and charged).
+   - **Eligible Messages**: Any other failed WhatsApp message (e.g. `DISPATCH_NOT_SENT` or Meta-refused 4xx errors) may be retried from the dashboard; on retry, both `source_id` and `dispatch_started_at` are cleared so the dispatch can proceed. Non-WhatsApp channels retain upstream retry behavior.
 
 ### Meta Billing Guarantee for Failed Messages
 * **Meta WhatsApp Cloud API charges only upon successful delivery (`status: delivered`)**.
-* Messages that fail (e.g., PDF download failure `131053`, phone not on WhatsApp `131026`, or network timeouts) **incur $0 charge**.
-* Resending after a confirmed failure will **not** cause double billing.
+* Messages that fail before delivery (e.g., PDF download failure `131053`, phone not on WhatsApp `131026`, or connection failures) **incur $0 charge**.
+* Resending after a confirmed failure with `DISPATCH_NOT_SENT` will **not** cause double billing.
 
 ### Webhook Event (`message_updated`)
 Configure an incoming webhook endpoint in Raqmi Connect (**Settings → Integrations → Webhooks**).

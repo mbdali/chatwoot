@@ -1,28 +1,41 @@
 class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
+  CONNECTION_ERRORS = [Net::OpenTimeout, Errno::ECONNREFUSED, SocketError].freeze
+
   def perform
     return if message.source_id.present?
+    return handle_interrupted_dispatch if interrupted_dispatch?
 
     super
+  rescue *CONNECTION_ERRORS => e
+    handle_connection_error(e)
   rescue StandardError, Timeout::Error => e
     handle_dispatch_error(e)
   end
 
   private
 
-  def handle_dispatch_error(error)
+  def handle_connection_error(error)
     return if message.source_id.present?
 
-    error_message = if error.is_a?(Exception)
-                      if dispatch_started?
-                        "DISPATCH_UNKNOWN: #{error.class}: #{error.message}"
-                      else
-                        "DISPATCH_NOT_SENT: #{error.class}"
-                      end
+    attrs = (message.content_attributes || {}).except('dispatch_started_at', :dispatch_started_at)
+    message.update!(status: :failed, external_error: "DISPATCH_NOT_SENT: #{error.class}", content_attributes: attrs)
+  end
+
+  def handle_dispatch_error(error)
+    return if message.source_id.present?
+    return handle_connection_error(error) if connection_error?(error)
+
+    error_message = if dispatch_started?
+                      "DISPATCH_UNKNOWN: #{error.class}: #{error.message}"
                     else
-                      error.to_s
+                      "DISPATCH_NOT_SENT: #{error.class}: #{error.message}"
                     end
 
     message.update!(status: :failed, external_error: error_message)
+  end
+
+  def connection_error?(error)
+    CONNECTION_ERRORS.any? { |klass| error.is_a?(klass) }
   end
 
   def channel_class
@@ -115,7 +128,9 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
 
   def mark_dispatch_started!
     attrs = (message.content_attributes&.deep_dup || {}).merge('dispatch_started_at' => Time.now.utc.iso8601)
-    message.update_column(:content_attributes, attrs)
+    # rubocop:disable Rails/SkipsModelValidations
+    message.update_columns(content_attributes: attrs)
+    # rubocop:enable Rails/SkipsModelValidations
     message.content_attributes = attrs
   end
 

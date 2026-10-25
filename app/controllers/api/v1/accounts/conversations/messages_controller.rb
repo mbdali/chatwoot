@@ -76,15 +76,42 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     message.with_lock do
       next false unless message.failed?
 
+      validate_whatsapp_retry! if whatsapp_message?(message)
+
       Messages::StatusUpdateService.new(message, 'sent').perform
-      clear_source_id unless @conversation.inbox.api? || @conversation.inbox.web_widget?
+      clear_retry_identifiers
       true
     end
   end
 
+  def validate_whatsapp_retry!
+    if (message.content_attributes&.[]('erp_outbox_id') || message.content_attributes&.[](:erp_outbox_id)).present?
+      raise CustomExceptions::MessageRetryError, I18n.t('conversations.messages.retry.erp_outbox_error')
+    end
+
+    if message.external_error.to_s.start_with?('DISPATCH_UNKNOWN:')
+      raise CustomExceptions::MessageRetryError, I18n.t('conversations.messages.retry.dispatch_unknown_error')
+    end
+  end
+
+  def clear_retry_identifiers
+    return if @conversation.inbox.api? || @conversation.inbox.web_widget?
+
+    clear_source_id
+  end
+
   def clear_source_id
     Rails.logger.info "Cleared older source ID #{message.source_id} for message #{message.id}" if message.source_id.present?
-    message.update!(source_id: nil)
+    if whatsapp_message?(message)
+      attrs = (message.content_attributes || {}).except('dispatch_started_at', :dispatch_started_at)
+      message.update!(source_id: nil, content_attributes: attrs)
+    else
+      message.update!(source_id: nil)
+    end
+  end
+
+  def whatsapp_message?(message)
+    message.conversation.inbox.channel.is_a?(Channel::Whatsapp)
   end
 
   def permitted_params
