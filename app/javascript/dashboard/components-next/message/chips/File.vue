@@ -5,8 +5,9 @@ import { getFileInfo } from '@chatwoot/utils';
 
 import FileIcon from 'next/icon/FileIcon.vue';
 import Icon from 'next/icon/Icon.vue';
+import PdfCard from '../bubbles/PdfCard.vue';
 
-const { attachment } = defineProps({
+const props = defineProps({
   attachment: {
     type: Object,
     required: true,
@@ -16,7 +17,12 @@ const { attachment } = defineProps({
 const { t } = useI18n();
 
 const fileDetails = computed(() => {
-  return getFileInfo(attachment?.dataUrl || '');
+  return getFileInfo(props.attachment?.dataUrl || props.attachment?.data_url || '');
+});
+
+const isPdf = computed(() => {
+  const ext = props.attachment?.extension || fileDetails.value.type;
+  return ext?.toLowerCase() === 'pdf';
 });
 
 const displayFileName = computed(() => {
@@ -56,7 +62,9 @@ const textColorClass = computed(() => {
 </script>
 
 <template>
+  <PdfCard v-if="isPdf" :attachment="attachment" class="my-1" />
   <div
+    v-else
     class="h-9 bg-n-alpha-white gap-2 overflow-hidden items-center flex px-2 rounded-lg border border-n-container"
   >
     <FileIcon class="flex-shrink-0" :file-type="fileDetails.type" />

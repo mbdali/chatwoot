@@ -4,14 +4,19 @@ import { useI18n } from 'vue-i18n';
 
 import { useMessageContext } from '../provider.js';
 import BaseAttachmentBubble from './BaseAttachment.vue';
+import PdfBubble from './PdfBubble.vue';
 import FileIcon from 'next/icon/FileIcon.vue';
 
 const { attachments } = useMessageContext();
 
 const { t } = useI18n();
 
+const attachment = computed(() => {
+  return attachments.value?.[0] || {};
+});
+
 const url = computed(() => {
-  return attachments.value[0].dataUrl;
+  return attachment.value.dataUrl || attachment.value.data_url || '';
 });
 
 const fileName = computed(() => {
@@ -23,12 +28,18 @@ const fileName = computed(() => {
 });
 
 const fileType = computed(() => {
-  return fileName.value.split('.').pop();
+  const extension = attachment.value.extension;
+  if (extension) return extension.toLowerCase();
+  return fileName.value.split('.').pop()?.toLowerCase();
 });
+
+const isPdf = computed(() => fileType.value === 'pdf');
 </script>
 
 <template>
+  <PdfBubble v-if="isPdf" :attachment="attachment" />
   <BaseAttachmentBubble
+    v-else
     icon="i-teenyicons-user-circle-solid"
     icon-bg-color="bg-n-alpha-3 dark:bg-n-alpha-white"
     sender-translation-key="CONVERSATION.SHARED_ATTACHMENT.FILE"
