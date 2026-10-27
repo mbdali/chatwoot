@@ -1,5 +1,14 @@
 # Chatwoot Development Guidelines
 
+## Fork Guidelines (Raqmi Connect)
+
+- **Reference [`docs/FORK.md`](file:///home/mbdali/Projects/chatwoot/docs/FORK.md)**: Always consult `docs/FORK.md` before modifying files or implementing new features.
+- **Branch Strategy**: `develop` tracks upstream `chatwoot/chatwoot` untouched; `master` contains upstream + this fork.
+- **Do NOT edit upstream Ruby files directly**: Custom backend behavior must use `prepend` + `super`, placed in `app/**/raqmi_connect/` and wired in `config/initializers/raqmi_connect.rb`.
+- **Restricted upstream edits**: Modifying existing upstream files is strictly limited to frontend branding, SCSS/Tailwind, and views documented in `docs/FORK.md`.
+- **Run Fork Specs**: Whenever modifying or verifying customizations, always run the fork test suite:
+  - `bundle exec rspec spec/**/*_raqmi_connect_spec.rb`
+
 ## Build / Test / Lint
 
 - **Setup**: `bundle install && pnpm install`
