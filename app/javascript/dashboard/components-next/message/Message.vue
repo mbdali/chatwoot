@@ -711,11 +711,11 @@ provideMessageContext({
             />
             <button
               type="button"
-              class="w-6 h-6 rounded-full flex items-center justify-center text-n-slate-10 hover:text-n-slate-12 hover:bg-n-alpha-2 cursor-pointer transition-colors"
+              class="w-6 h-6 rounded-full flex items-center justify-center text-n-slate-11 hover:text-n-slate-12 bg-n-solid-1/90 dark:bg-n-solid-2/90 border border-n-weak shadow-xs hover:bg-n-solid-2 cursor-pointer transition-colors"
               :title="$t('CONVERSATION.REACT')"
               @click.stop="showQuickReactionPicker = !showQuickReactionPicker"
             >
-              <i class="i-lucide-smile-plus text-sm" />
+              <span class="i-ph-smiley-sticker size-3.5 flex-shrink-0" />
             </button>
           </div>
 
@@ -734,11 +734,11 @@ provideMessageContext({
             />
             <button
               type="button"
-              class="w-6 h-6 rounded-full flex items-center justify-center text-n-slate-10 hover:text-n-slate-12 hover:bg-n-alpha-2 cursor-pointer transition-colors"
+              class="w-6 h-6 rounded-full flex items-center justify-center text-n-slate-11 hover:text-n-slate-12 bg-n-solid-1/90 dark:bg-n-solid-2/90 border border-n-weak shadow-xs hover:bg-n-solid-2 cursor-pointer transition-colors"
               :title="$t('CONVERSATION.REACT')"
               @click.stop="showQuickReactionPicker = !showQuickReactionPicker"
             >
-              <i class="i-lucide-smile-plus text-sm" />
+              <span class="i-ph-smiley-sticker size-3.5 flex-shrink-0" />
             </button>
           </div>
         </div>

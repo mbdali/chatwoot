@@ -95,5 +95,4 @@ const onReactionClick = emoji => {
       </span>
     </button>
   </div>
-  <div v-else />
 </template>
