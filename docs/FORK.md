@@ -32,6 +32,7 @@ Not the `custom/` extension folder: `ChatwootApp.extensions` loads `enterprise` 
 
 Shared rules: `RaqmiConnect::WhatsappDispatch`. Strings: `config/locales/raqmi_connect.en.yml`.
 The ERP contract (marker, prefixes, retry rule) is in `docs/api-integration-guide.md` §5.
+The production Docker build and deployment guide is in `docs/raqmiconnect-deployment.md`.
 
 ## Fork-owned files (new, never conflict)
 
