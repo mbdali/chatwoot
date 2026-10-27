@@ -19,6 +19,9 @@ Rails.application.config.after_initialize do
     namespace :api, defaults: { format: 'json' } do
       namespace :v1 do
         resources :accounts, only: [] do
+          namespace :reports do
+            get :messages, to: '/raqmi_connect/message_reports#show'
+          end
           resources :conversations, only: [] do
             scope module: :conversations do
               resources :messages, only: [] do

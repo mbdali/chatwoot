@@ -26,6 +26,7 @@ import LiveReports from './LiveReports.vue';
 import MonitorShow from './monitors/MonitorShow.vue';
 import MonitorsIndex from './monitors/MonitorsIndex.vue';
 import SLAReports from './SLAReports.vue';
+import MessagesReport from './MessagesReport.vue';
 
 const meta = {
   featureFlag: FEATURE_FLAGS.REPORTS,
@@ -146,6 +147,12 @@ export default {
           name: 'account_overview_reports',
           meta,
           component: LiveReports,
+        },
+        {
+          path: 'messages',
+          name: 'messages_reports',
+          meta,
+          component: MessagesReport,
         },
         {
           path: 'conversation',

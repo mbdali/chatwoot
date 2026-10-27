@@ -38,7 +38,8 @@ The ERP contract (marker, prefixes, retry rule) is in `docs/api-integration-guid
 `app/**/raqmi_connect/`, `spec/**/*_raqmi_connect_spec.rb`, `config/initializers/raqmi_connect.rb`,
 `config/initializers/custom_branding.rb`, `config/locales/raqmi_connect.en.yml`,
 `lib/custom_exceptions/message_retry_error.rb`, `lib/custom_exceptions/whatsapp_reaction_error.rb`,
-the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`), conversation search components,
+the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
+messages report (`MessagesReport.vue`, `messageReports.js`), conversation search components,
 brand assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
 
 ## Upstream files we still edit (can conflict on merge)
@@ -48,8 +49,12 @@ Frontend and branding only; Ruby behaviour lives in prepended modules above.
 - `app/javascript/dashboard/assets/scss/_next-colors.scss`, `_woot.scss`: brand colours
 - `app/javascript/dashboard/components-next/message/bubbles/File.vue`, `chips/File.vue`: PDF preview
 - `app/javascript/dashboard/components-next/message/Message.vue`: reaction badges and hover reaction trigger
+- `app/javascript/dashboard/components-next/sidebar/Sidebar.vue`: Messages report link in navigation
+- `app/javascript/dashboard/routes/dashboard/settings/reports/reports.routes.js`: Messages report route definition
 - `app/javascript/dashboard/components/ChatList.vue`, `i18n/locale/en/chatlist.json`: in-place search
 - `app/javascript/dashboard/i18n/locale/en/conversation.json`, `app/javascript/entrypoints/dashboard.js`
+- `app/javascript/dashboard/i18n/locale/en/report.json`: `MESSAGES_REPORT` copy
+- `app/javascript/dashboard/i18n/locale/en/settings.json`: `SIDEBAR.REPORTS_MESSAGES` copy
 - `app/helpers/super_admin/navigation_helper.rb`, `app/views/layouts/super_admin/application.html.erb`,
   `app/views/super_admin/application/_brand.html.erb`, `_standalone.html.erb`: super-admin branding
 - `tailwind.config.js`, `docker/Dockerfile`, `.gitignore`, `public/manifest.json`

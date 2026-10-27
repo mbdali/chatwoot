@@ -837,5 +837,34 @@
     "AVG_REPLY_TIME": "Avg. Customer Waiting Time",
     "RESOLUTION_COUNT": "Resolution Count",
     "CONVERSATIONS": "No. of conversations"
+  },
+  "MESSAGES_REPORT": {
+    "HEADER": "Messages",
+    "DESCRIPTION": "Analyze incoming and outgoing message volume and delivery health across inboxes.",
+    "FILTER_ALL_INBOXES": "All Inboxes",
+    "INCOMING_SECTION": {
+      "TITLE": "Incoming Messages",
+      "TOTAL": "Total incoming messages",
+      "VS_PREVIOUS": "vs previous period"
+    },
+    "OUTGOING_SECTION": {
+      "TITLE": "Outgoing Messages",
+      "TOTAL": "Total outgoing messages",
+      "DELIVERY_RATE": "Delivery Rate",
+      "ERROR_RATE": "Error Rate",
+      "DELIVERED_COUNT": "{count} delivered / read",
+      "FAILED_COUNT": "{count} failed",
+      "VS_PREVIOUS": "vs previous period",
+      "GROUP_BY_LABEL": "Group by",
+      "GROUP_BY_STATUS": "By Status",
+      "GROUP_BY_INBOX": "By Inbox"
+    },
+    "EMPTY_STATE": "No messages recorded for the selected time range or inbox.",
+    "INTERVAL": {
+      "LABEL": "Interval",
+      "DAY": "Daily",
+      "WEEK": "Weekly",
+      "MONTH": "Monthly"
+    }
   }
 }
