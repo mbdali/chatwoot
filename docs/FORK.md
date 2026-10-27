@@ -58,7 +58,7 @@ Frontend and branding only; Ruby behaviour lives in prepended modules above.
 - `app/javascript/dashboard/i18n/locale/en/settings.json`: `SIDEBAR.REPORTS_MESSAGES` copy
 - `app/helpers/super_admin/navigation_helper.rb`, `app/views/layouts/super_admin/application.html.erb`,
   `app/views/super_admin/application/_brand.html.erb`, `_standalone.html.erb`: super-admin branding
-- `tailwind.config.js`, `docker/Dockerfile`, `.gitignore`, `public/manifest.json`
+- `tailwind.config.js`, `docker/Dockerfile`, `.gitignore`, `.dockerignore`, `public/manifest.json`
 - Replaced icons in `public/` (favicons, apple/android/ms icons, `brand-assets/logo*.svg`): on conflict,
   keep ours.
 

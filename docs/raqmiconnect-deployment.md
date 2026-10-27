@@ -57,15 +57,18 @@ docker build \
 
 ### Step 2: Tar and Compress the Docker Image
 
-Piping `docker save` through `gzip` compresses the image from ~2–3 GB down to ~600–800 MB, significantly reducing transfer time:
+Piping `docker save` through `gzip` compresses the image from ~2–3 GB down to ~600–800 MB, significantly reducing transfer time. 
+
+> [!TIP]
+> Save the compressed archive to `/tmp/` (or outside the repository) to avoid accidentally committing or nesting large archives in the project directory:
 
 ```bash
-docker save raqmi-connect:latest | gzip > raqmi-connect-latest.tar.gz
+docker save raqmi-connect:latest | gzip > /tmp/raqmi-connect-latest.tar.gz
 ```
 
-Verify the archive was generated:
+Verify the archive was generated and check its size:
 ```bash
-ls -lh raqmi-connect-latest.tar.gz
+ls -lh /tmp/raqmi-connect-latest.tar.gz
 ```
 
 ---
@@ -76,10 +79,10 @@ Use `rsync` (recommended for progress and resume support) or `scp` to transfer t
 
 ```bash
 # Using rsync (recommended)
-rsync -avP --partial raqmi-connect-latest.tar.gz USER@YOUR_SERVER_IP:/tmp/
+rsync -avP --partial /tmp/raqmi-connect-latest.tar.gz USER@YOUR_SERVER_IP:/tmp/
 
 # Or using standard scp
-scp raqmi-connect-latest.tar.gz USER@YOUR_SERVER_IP:/tmp/
+scp /tmp/raqmi-connect-latest.tar.gz USER@YOUR_SERVER_IP:/tmp/
 ```
 
 ---

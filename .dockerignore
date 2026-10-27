@@ -15,3 +15,9 @@ vendor/bundle
 .DS_Store
 *.swp
 *~
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+raqmi-connect*
+
