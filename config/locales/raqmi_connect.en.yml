@@ -5,3 +5,6 @@ en:
       retry:
         erp_outbox_error: 'This message was sent by the ERP. Resend it from the ERP.'
         dispatch_unknown_error: 'Delivery status is unknown and the message may have been delivered. It cannot be retried.'
+      whatsapp:
+        reaction_blank_error: 'Emoji cannot be blank.'
+        reaction_missing_source_id: 'Cannot react to a message without a WhatsApp message ID.'

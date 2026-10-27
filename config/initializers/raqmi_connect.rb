@@ -5,8 +5,32 @@
 # DISABLE_ENTERPRISE.
 Rails.application.config.to_prepare do
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappDispatchMarker)
+  Channel::Whatsapp.prepend(RaqmiConnect::WhatsappChannelReactions)
+  Whatsapp::IncomingMessageBaseService.prepend(RaqmiConnect::WhatsappIncomingReaction)
+  Whatsapp::Providers::WhatsappCloudService.prepend(RaqmiConnect::WhatsappCloudReactions)
   Whatsapp::SendOnWhatsappService.prepend(RaqmiConnect::WhatsappDispatchFailure)
   Whatsapp::Providers::BaseService.prepend(RaqmiConnect::WhatsappProviderErrorClassification)
   SendReplyJob.prepend(RaqmiConnect::SendReplyJobDispatchFailure)
   Api::V1::Accounts::Conversations::MessagesController.prepend(RaqmiConnect::MessageRetryGuard)
+end
+
+Rails.application.config.after_initialize do
+  Rails.application.routes.append do
+    namespace :api, defaults: { format: 'json' } do
+      namespace :v1 do
+        resources :accounts, only: [] do
+          resources :conversations, only: [] do
+            scope module: :conversations do
+              resources :messages, only: [] do
+                member do
+                  post :reaction, controller: '/raqmi_connect/message_reactions', action: :create
+                  delete :reaction, controller: '/raqmi_connect/message_reactions', action: :destroy
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
 end

@@ -79,7 +79,11 @@
     "PAGE": "page",
     "PAGES": "pages",
     "GO_TO_MESSAGE": "Go to message",
-    "REACT": "React to this PDF message with an emoji",
+    "REACT": "React with an emoji",
+    "REACT_WITH_EMOJI": "React with emoji",
+    "REACTIONS": {
+      "YOU": "You"
+    },
     "STAR": "Star",
     "PIN": "Pin",
     "FORWARD": "Forward",

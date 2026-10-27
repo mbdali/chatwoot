@@ -26,6 +26,9 @@ Not the `custom/` extension folder: `ChatwootApp.extensions` loads `enterprise` 
 | `RaqmiConnect::SendReplyJobDispatchFailure` | `SendReplyJob` | `arguments.first` is the message (or its id) | `discard_on` so a WhatsApp send is never retried; other channels re-raise and keep upstream retries |
 | `RaqmiConnect::WhatsappProviderErrorClassification` | `Whatsapp::Providers::BaseService` | private `handle_error(response, message)` | Meta 5xx is `DISPATCH_UNKNOWN: HTTP <code>`, never a plain (resendable) failure |
 | `RaqmiConnect::MessageRetryGuard` | `Api::V1::Accounts::Conversations::MessagesController` | private `claim_message_retry`, `clear_source_id`, `message` | Dashboard Retry refuses ERP messages and `DISPATCH_UNKNOWN`; clears the marker on an allowed retry |
+| `RaqmiConnect::WhatsappIncomingReaction` | `Whatsapp::IncomingMessageBaseService` | `perform`, `messages_data`, `message_type`, `inbox`, `set_contact`, `lock_message_source_id!` | Intercepts incoming `type: reaction` webhooks, parses emoji additions/removals, and persists to `content_attributes['reactions']` under a row lock |
+| `RaqmiConnect::WhatsappChannelReactions` | `Channel::Whatsapp` | `provider_service` | Delegates `send_reaction(phone, target_source_id, emoji)` to provider service |
+| `RaqmiConnect::WhatsappCloudReactions` | `Whatsapp::Providers::WhatsappCloudService` | `phone_id_path`, `api_headers`, `recipient_params` | Dispatches emoji reactions and removals (`emoji: ""`) to Meta WhatsApp Cloud API |
 
 Shared rules: `RaqmiConnect::WhatsappDispatch`. Strings: `config/locales/raqmi_connect.en.yml`.
 The ERP contract (marker, prefixes, retry rule) is in `docs/api-integration-guide.md` §5.
@@ -34,8 +37,9 @@ The ERP contract (marker, prefixes, retry rule) is in `docs/api-integration-guid
 
 `app/**/raqmi_connect/`, `spec/**/*_raqmi_connect_spec.rb`, `config/initializers/raqmi_connect.rb`,
 `config/initializers/custom_branding.rb`, `config/locales/raqmi_connect.en.yml`,
-`lib/custom_exceptions/message_retry_error.rb`, the PDF viewer and conversation search components, brand
-assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
+`lib/custom_exceptions/message_retry_error.rb`, `lib/custom_exceptions/whatsapp_reaction_error.rb`,
+the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`), conversation search components,
+brand assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
 
 ## Upstream files we still edit (can conflict on merge)
 
@@ -43,6 +47,7 @@ Frontend and branding only; Ruby behaviour lives in prepended modules above.
 
 - `app/javascript/dashboard/assets/scss/_next-colors.scss`, `_woot.scss`: brand colours
 - `app/javascript/dashboard/components-next/message/bubbles/File.vue`, `chips/File.vue`: PDF preview
+- `app/javascript/dashboard/components-next/message/Message.vue`: reaction badges and hover reaction trigger
 - `app/javascript/dashboard/components/ChatList.vue`, `i18n/locale/en/chatlist.json`: in-place search
 - `app/javascript/dashboard/i18n/locale/en/conversation.json`, `app/javascript/entrypoints/dashboard.js`
 - `app/helpers/super_admin/navigation_helper.rb`, `app/views/layouts/super_admin/application.html.erb`,

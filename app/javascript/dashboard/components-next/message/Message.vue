@@ -48,6 +48,9 @@ import WhatsappReferral from './bubbles/Text/WhatsappReferral.vue';
 import MessageError from './MessageError.vue';
 import ForwardEmailPanel from './forward/ForwardEmailPanel.vue';
 import ForwardedEmailBanner from './forward/ForwardedEmailBanner.vue';
+import MessageReactions from './MessageReactions.vue';
+import QuickReactionPicker from './QuickReactionPicker.vue';
+import { useMessageReactions } from 'dashboard/composables/useMessageReactions';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
 import { useTranslations } from 'dashboard/composables/useTranslations';
@@ -150,9 +153,12 @@ const contextMenuPosition = ref({});
 const showBackgroundHighlight = ref(false);
 const showContextMenu = ref(false);
 const showForwardEmail = ref(false);
+const showQuickReactionPicker = ref(false);
 const forwardEmailPosition = ref({});
 const { t } = useI18n();
 const route = useRoute();
+const currentAccountId = useMapGetter('getCurrentAccountId');
+const { toggleReaction } = useMessageReactions();
 const inboxGetter = useMapGetter('inboxes/getInbox');
 const inbox = computed(() => inboxGetter.value(props.inboxId) || {});
 const isOnChatwootCloud = useMapGetter('globalConfig/isOnChatwootCloud');
@@ -517,6 +523,49 @@ function handleReplyTo() {
   emitter.emit(BUS_EVENTS.TOGGLE_REPLY_TO_MESSAGE, props);
 }
 
+const messageReactions = computed(() => {
+  return props.contentAttributes?.reactions || [];
+});
+
+const currentUserReactionEmoji = computed(() => {
+  const userReaction = messageReactions.value.find(
+    r =>
+      r.actor_type === 'User' &&
+      Number(r.actor_id) === Number(props.currentUserId)
+  );
+  return userReaction?.emoji || '';
+});
+
+const canReact = computed(() => {
+  if (props.private) return false;
+  if (isMessageDeleted.value) return false;
+  if (props.status === MESSAGE_STATUS.FAILED) return false;
+  return true;
+});
+
+const handleSelectReaction = async emoji => {
+  showQuickReactionPicker.value = false;
+  await toggleReaction({
+    accountId: currentAccountId.value,
+    conversationId: props.conversationId,
+    messageId: props.id,
+    emoji,
+    currentUserId: props.currentUserId,
+    existingReactions: messageReactions.value,
+  });
+};
+
+const handleToggleReaction = async emoji => {
+  await toggleReaction({
+    accountId: currentAccountId.value,
+    conversationId: props.conversationId,
+    messageId: props.id,
+    emoji,
+    currentUserId: props.currentUserId,
+    existingReactions: messageReactions.value,
+  });
+};
+
 const avatarInfo = computed(() => {
   if (props.contentAttributes?.externalEcho) {
     const { name, avatar_url, channel_type, medium, voice_enabled } =
@@ -633,12 +682,11 @@ provideMessageContext({
         <Avatar v-bind="avatarInfo" :size="24" />
       </div>
       <div
-        class="[grid-area:bubble] flex min-w-0"
+        class="[grid-area:bubble] flex min-w-0 flex-col"
         :class="{
-          'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
-          'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
-          'flex-col items-start gap-2':
-            shouldShowWhatsappReferral || isForwardedEmail,
+          'ltr:ml-8 rtl:mr-8 items-end': orientation === ORIENTATION.RIGHT,
+          'ltr:mr-8 rtl:ml-8 items-start': orientation === ORIENTATION.LEFT,
+          'gap-2': shouldShowWhatsappReferral || isForwardedEmail,
         }"
         @contextmenu="openContextMenu($event)"
       >
@@ -647,7 +695,61 @@ provideMessageContext({
           :referral="contentAttributes.referral"
         />
         <ForwardedEmailBanner v-if="isForwardedEmail" />
-        <Component :is="componentToRender" />
+        <div
+          class="relative group/bubble-wrap flex items-center gap-1.5 max-w-full"
+        >
+          <div
+            v-if="canReact && orientation === ORIENTATION.RIGHT"
+            class="opacity-0 group-hover/bubble-wrap:opacity-100 transition-opacity flex items-center relative"
+          >
+            <QuickReactionPicker
+              v-if="showQuickReactionPicker"
+              :active-emoji="currentUserReactionEmoji"
+              class="absolute bottom-full mb-1 right-0"
+              @select="handleSelectReaction"
+              @close="showQuickReactionPicker = false"
+            />
+            <button
+              type="button"
+              class="w-6 h-6 rounded-full flex items-center justify-center text-n-slate-10 hover:text-n-slate-12 hover:bg-n-alpha-2 cursor-pointer transition-colors"
+              :title="$t('CONVERSATION.REACT')"
+              @click.stop="showQuickReactionPicker = !showQuickReactionPicker"
+            >
+              <i class="i-lucide-smile-plus text-sm" />
+            </button>
+          </div>
+
+          <Component :is="componentToRender" />
+
+          <div
+            v-if="canReact && orientation !== ORIENTATION.RIGHT"
+            class="opacity-0 group-hover/bubble-wrap:opacity-100 transition-opacity flex items-center relative"
+          >
+            <QuickReactionPicker
+              v-if="showQuickReactionPicker"
+              :active-emoji="currentUserReactionEmoji"
+              class="absolute bottom-full mb-1 left-0"
+              @select="handleSelectReaction"
+              @close="showQuickReactionPicker = false"
+            />
+            <button
+              type="button"
+              class="w-6 h-6 rounded-full flex items-center justify-center text-n-slate-10 hover:text-n-slate-12 hover:bg-n-alpha-2 cursor-pointer transition-colors"
+              :title="$t('CONVERSATION.REACT')"
+              @click.stop="showQuickReactionPicker = !showQuickReactionPicker"
+            >
+              <i class="i-lucide-smile-plus text-sm" />
+            </button>
+          </div>
+        </div>
+
+        <MessageReactions
+          v-if="messageReactions.length"
+          :reactions="messageReactions"
+          :current-user-id="currentUserId"
+          :can-react="canReact"
+          @toggle="handleToggleReaction"
+        />
       </div>
       <MessageError
         v-if="contentAttributes.externalError"
