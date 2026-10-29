@@ -101,6 +101,7 @@ CLAUDE.local.md
 # Histoire deployment
 .netlify
 .histoire
+.pnpm-store
 .pnpm-store/*
 local/
 Procfile.worktree
