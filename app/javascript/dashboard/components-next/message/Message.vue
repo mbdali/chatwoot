@@ -372,8 +372,16 @@ const componentToRender = computed(() => {
     return InstagramStoryBubble;
   }
 
+  const hasTempAttachments =
+    Array.isArray(props.attachments) &&
+    props.attachments.some(att => !att.dataUrl && !att.data_url);
+
+  if (props.status === MESSAGE_STATUS.PROGRESS && hasTempAttachments) {
+    return TextBubble;
+  }
+
   if (Array.isArray(props.attachments) && props.attachments.length === 1) {
-    const fileType = props.attachments[0].fileType;
+    const fileType = props.attachments[0]?.fileType;
 
     if (fileType === ATTACHMENT_TYPES.FALLBACK) return FallbackBubble;
 

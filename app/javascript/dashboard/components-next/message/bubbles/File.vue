@@ -24,7 +24,7 @@ const fileName = computed(() => {
     const filename = url.value.substring(url.value.lastIndexOf('/') + 1);
     return filename || t('CONVERSATION.UNKNOWN_FILE_TYPE');
   }
-  return t('CONVERSATION.UNKNOWN_FILE_TYPE');
+  return attachment.value.fileName || t('CONVERSATION.UNKNOWN_FILE_TYPE');
 });
 
 const fileType = computed(() => {
@@ -33,7 +33,7 @@ const fileType = computed(() => {
   return fileName.value.split('.').pop()?.toLowerCase();
 });
 
-const isPdf = computed(() => fileType.value === 'pdf');
+const isPdf = computed(() => !!url.value && fileType.value === 'pdf');
 </script>
 
 <template>
@@ -44,10 +44,14 @@ const isPdf = computed(() => fileType.value === 'pdf');
     icon-bg-color="bg-n-alpha-3 dark:bg-n-alpha-white"
     sender-translation-key="CONVERSATION.SHARED_ATTACHMENT.FILE"
     :content="decodeURI(fileName)"
-    :action="{
-      href: url,
-      label: $t('CONVERSATION.DOWNLOAD'),
-    }"
+    :action="
+      url
+        ? {
+            href: url,
+            label: $t('CONVERSATION.DOWNLOAD'),
+          }
+        : null
+    "
   >
     <template #icon>
       <FileIcon :file-type="fileType" class="size-4" />

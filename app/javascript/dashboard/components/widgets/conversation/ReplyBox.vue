@@ -1157,6 +1157,42 @@ export default {
     removeAttachment(attachments) {
       this.attachedFiles = attachments;
     },
+    getPendingAttachment(attachment) {
+      const resource = attachment.resource || {};
+      const mime =
+        resource.content_type || resource.type || resource.file?.type || '';
+      const fileName =
+        resource.filename || resource.name || resource.file?.name || '';
+      const extension = fileName.split('.').pop()?.toLowerCase();
+
+      let fileType = 'file';
+      if (attachment.isVoiceMessage) {
+        fileType = 'audio';
+      } else if (
+        mime.startsWith('image/') ||
+        ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(extension)
+      ) {
+        fileType = 'image';
+      } else if (
+        mime.startsWith('video/') ||
+        ['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(extension)
+      ) {
+        fileType = 'video';
+      } else if (
+        mime.startsWith('audio/') ||
+        ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'].includes(extension)
+      ) {
+        fileType = 'audio';
+      }
+
+      return {
+        fileType,
+        fileName,
+        fileSize:
+          resource.byte_size || resource.size || resource.file?.size || 0,
+        thumbUrl: fileType === 'image' ? attachment.thumb || '' : '',
+      };
+    },
     setReplyToInPayload(payload) {
       if (this.inReplyTo?.id) {
         return {
@@ -1183,6 +1219,7 @@ export default {
           let attachmentPayload = {
             conversationId: this.currentChat.id,
             files: [attachedFile],
+            pendingAttachments: [this.getPendingAttachment(attachment)],
             private: false,
             message: caption,
             sender: this.sender,
@@ -1233,6 +1270,7 @@ export default {
 
       if (this.attachedFiles && this.attachedFiles.length) {
         messagePayload.files = [];
+        messagePayload.pendingAttachments = [];
         this.attachedFiles.forEach(attachment => {
           if (this.globalConfig.directUploadsEnabled) {
             messagePayload.files.push(attachment.blobSignedId);
@@ -1242,6 +1280,9 @@ export default {
           } else {
             messagePayload.files.push(attachment.resource.file);
           }
+          messagePayload.pendingAttachments.push(
+            this.getPendingAttachment(attachment)
+          );
         });
       }
 

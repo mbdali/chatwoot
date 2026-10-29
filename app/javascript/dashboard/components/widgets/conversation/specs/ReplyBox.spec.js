@@ -477,4 +477,75 @@ describe('ReplyBox', () => {
       wrapper.unmount();
     });
   });
+
+  describe('attachment payloads', () => {
+    it('populates pendingAttachments in getMessagePayload', () => {
+      const { wrapper } = mountWith({
+        inbox: { channel_type: 'Channel::WebWidget' },
+      });
+      wrapper.vm.attachedFiles = [
+        {
+          resource: {
+            name: 'sample.pdf',
+            size: 1024,
+            type: 'application/pdf',
+          },
+          thumb: '',
+        },
+        {
+          resource: {
+            name: 'photo.png',
+            size: 2048,
+            type: 'image/png',
+          },
+          thumb: 'data:image/png;base64,photo',
+        },
+      ];
+
+      const payload = wrapper.vm.getMessagePayload('hello');
+      expect(payload.pendingAttachments).toEqual([
+        {
+          fileType: 'file',
+          fileName: 'sample.pdf',
+          fileSize: 1024,
+          thumbUrl: '',
+        },
+        {
+          fileType: 'image',
+          fileName: 'photo.png',
+          fileSize: 2048,
+          thumbUrl: 'data:image/png;base64,photo',
+        },
+      ]);
+      wrapper.unmount();
+    });
+
+    it('populates pendingAttachments in getMultipleMessagesPayload', () => {
+      const { wrapper } = mountWith({
+        inbox: { channel_type: 'Channel::Whatsapp' },
+      });
+      wrapper.vm.attachedFiles = [
+        {
+          resource: {
+            name: 'doc.pdf',
+            size: 4096,
+            type: 'application/pdf',
+          },
+          thumb: '',
+        },
+      ];
+
+      const payloads = wrapper.vm.getMultipleMessagesPayload('caption');
+      expect(payloads).toHaveLength(1);
+      expect(payloads[0].pendingAttachments).toEqual([
+        {
+          fileType: 'file',
+          fileName: 'doc.pdf',
+          fileSize: 4096,
+          thumbUrl: '',
+        },
+      ]);
+      wrapper.unmount();
+    });
+  });
 });

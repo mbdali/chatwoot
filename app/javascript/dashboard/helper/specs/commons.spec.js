@@ -98,6 +98,76 @@ describe('#createPendingMessage', () => {
     const pending = createPendingMessage(messageWithFile);
     expect(pending.attachments.length).toBe(1);
   });
+
+  it('returns the pending message with multiple attachments when files array is passed', () => {
+    const messageWithFiles = {
+      message: 'hi',
+      files: [{ name: 'file1.pdf' }, { name: 'file2.pdf' }],
+    };
+    const pending = createPendingMessage(messageWithFiles);
+    expect(pending.attachments.length).toBe(2);
+    expect(pending.attachments[0].id).toBeDefined();
+    expect(pending.attachments[1].id).toBeDefined();
+    expect(pending.attachments[0].id).not.toBe(pending.attachments[1].id);
+  });
+
+  it('returns the pending message with one attachment when single file is in files array', () => {
+    const messageWithFile = {
+      message: 'hi',
+      files: [{ name: 'file1.pdf' }],
+    };
+    const pending = createPendingMessage(messageWithFile);
+    expect(pending.attachments.length).toBe(1);
+    expect(pending.attachments[0].id).toBeDefined();
+  });
+
+  it('returns attachments as null when files array is empty', () => {
+    const messageWithEmptyFiles = {
+      message: 'hi',
+      files: [],
+    };
+    const pending = createPendingMessage(messageWithEmptyFiles);
+    expect(pending.attachments).toBeNull();
+  });
+
+  it('builds temp attachments from pendingAttachments when present', () => {
+    const messageWithPendingAttachments = {
+      message: 'hi',
+      pendingAttachments: [
+        {
+          fileType: 'file',
+          fileName: 'document.pdf',
+          fileSize: 5000,
+          thumbUrl: '',
+        },
+        {
+          fileType: 'image',
+          fileName: 'photo.png',
+          fileSize: 12000,
+          thumbUrl: 'data:image/png;base64,mock',
+        },
+      ],
+    };
+    const pending = createPendingMessage(messageWithPendingAttachments);
+    expect(pending.attachments).toEqual([
+      {
+        id: expect.anything(),
+        fileType: 'file',
+        dataUrl: '',
+        thumbUrl: '',
+        fileSize: 5000,
+        fileName: 'document.pdf',
+      },
+      {
+        id: expect.anything(),
+        fileType: 'image',
+        dataUrl: '',
+        thumbUrl: 'data:image/png;base64,mock',
+        fileSize: 12000,
+        fileName: 'photo.png',
+      },
+    ]);
+  });
 });
 
 describe('convertToAttributeSlug', () => {
