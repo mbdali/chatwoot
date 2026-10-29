@@ -2,7 +2,10 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { getPdfThumbnail } from 'dashboard/helper/pdfHelper';
 
 const RETRY_DELAYS = [500, 1500];
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const wait = ms =>
+  new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 
 export const usePdfThumbnail = urlRef => {
   const isLoaded = ref(false);
@@ -30,6 +33,7 @@ export const usePdfThumbnail = urlRef => {
     isLoading.value = true;
     hasError.value = false;
 
+    /* eslint-disable no-await-in-loop */
     for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt += 1) {
       if (isStale()) return;
 
@@ -56,6 +60,7 @@ export const usePdfThumbnail = urlRef => {
         if (isStale()) return;
       }
     }
+    /* eslint-enable no-await-in-loop */
 
     if (!isStale()) {
       hasError.value = true;
