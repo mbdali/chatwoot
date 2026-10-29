@@ -13,9 +13,9 @@ defineProps({
   title: { type: String, default: '' }, // Title can be any name, description, etc
   action: {
     type: Object,
-    required: true,
+    default: null,
     validator: action => {
-      return action.label && (action.href || action.onClick);
+      return !action || (action.label && (action.href || action.onClick));
     },
   },
 });
