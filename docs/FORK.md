@@ -29,6 +29,7 @@ Not the `custom/` extension folder: `ChatwootApp.extensions` loads `enterprise` 
 | `RaqmiConnect::WhatsappIncomingReaction` | `Whatsapp::IncomingMessageBaseService` | `perform`, `messages_data`, `message_type`, `inbox`, `set_contact`, `lock_message_source_id!` | Intercepts incoming `type: reaction` webhooks, parses emoji additions/removals, and persists to `content_attributes['reactions']` under a row lock |
 | `RaqmiConnect::WhatsappChannelReactions` | `Channel::Whatsapp` | `provider_service` | Delegates `send_reaction(phone, target_source_id, emoji)` to provider service |
 | `RaqmiConnect::WhatsappCloudReactions` | `Whatsapp::Providers::WhatsappCloudService` | `phone_id_path`, `api_headers`, `recipient_params` | Dispatches emoji reactions and removals (`emoji: ""`) to Meta WhatsApp Cloud API |
+| `RaqmiConnect::ChatwootHubSilence` | `ChatwootHub.singleton_class` | `sync_with_hub`, `register_instance`, `emit_event`, `send_push`, `support_config` | Completely silences all telemetry, registration, and version-check pings to `hub.2.chatwoot.com` |
 
 Shared rules: `RaqmiConnect::WhatsappDispatch`. Strings: `config/locales/raqmi_connect.en.yml`.
 The ERP contract (marker, prefixes, retry rule) is in `docs/api-integration-guide.md` §5.

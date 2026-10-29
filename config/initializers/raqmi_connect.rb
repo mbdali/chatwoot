@@ -4,6 +4,7 @@
 # Not the `custom/` extension folder: ChatwootApp.extensions loads `enterprise` with it and ignores
 # DISABLE_ENTERPRISE.
 Rails.application.config.to_prepare do
+  ChatwootHub.singleton_class.prepend(RaqmiConnect::ChatwootHubSilence)
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappDispatchMarker)
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappChannelReactions)
   Whatsapp::IncomingMessageBaseService.prepend(RaqmiConnect::WhatsappIncomingReaction)
