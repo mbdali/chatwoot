@@ -16,11 +16,27 @@ const props = defineProps({
 
 const { t } = useI18n();
 
+const downloadUrl = computed(
+  () => props.attachment?.dataUrl || props.attachment?.data_url || ''
+);
+const hasDownloadUrl = computed(() => Boolean(downloadUrl.value));
+
 const fileDetails = computed(() => {
-  return getFileInfo(props.attachment?.dataUrl || props.attachment?.data_url || '');
+  const url = downloadUrl.value;
+  if (url) {
+    return getFileInfo(url);
+  }
+  const name = props.attachment?.fileName || '';
+  const lastDot = name.lastIndexOf('.');
+  const base = lastDot !== -1 ? name.substring(0, lastDot) : name;
+  const type =
+    props.attachment?.extension ||
+    (lastDot !== -1 ? name.substring(lastDot + 1).toLowerCase() : '');
+  return { name, base, type };
 });
 
 const isPdf = computed(() => {
+  if (!hasDownloadUrl.value) return false;
   const ext = props.attachment?.extension || fileDetails.value.type;
   return ext?.toLowerCase() === 'pdf';
 });
@@ -76,9 +92,10 @@ const textColorClass = computed(() => {
       {{ displayFileName }}
     </span>
     <a
+      v-if="hasDownloadUrl"
       v-tooltip="t('CONVERSATION.DOWNLOAD')"
       class="flex-shrink-0 size-9 grid place-content-center cursor-pointer text-n-slate-11 hover:text-n-slate-12 transition-colors"
-      :href="attachment.dataUrl"
+      :href="downloadUrl"
       rel="noreferrer noopener nofollow"
       target="_blank"
     >

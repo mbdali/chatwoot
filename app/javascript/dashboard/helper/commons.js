@@ -46,8 +46,26 @@ export const getTypingUsersText = (users = []) => {
 export const createPendingMessage = data => {
   const timestamp = Math.floor(new Date().getTime() / 1000);
   const tempMessageId = getUuid();
-  const { message, pendingMessageContent, file } = data;
-  const tempAttachments = [{ id: tempMessageId }];
+  const { message, pendingMessageContent, file, files, pendingAttachments } =
+    data;
+
+  let tempAttachments = null;
+  if (Array.isArray(pendingAttachments) && pendingAttachments.length) {
+    tempAttachments = pendingAttachments.map(att => ({
+      id: getUuid(),
+      fileType: att.fileType,
+      dataUrl: '',
+      thumbUrl: att.thumbUrl || '',
+      fileSize: att.fileSize,
+      fileName: att.fileName,
+    }));
+  } else {
+    const rawFiles = files || (file ? [file] : []);
+    tempAttachments = rawFiles.length
+      ? rawFiles.map(() => ({ id: getUuid() }))
+      : null;
+  }
+
   const pendingMessage = {
     ...data,
     content: pendingMessageContent || message || null,
@@ -57,7 +75,7 @@ export const createPendingMessage = data => {
     created_at: timestamp,
     message_type: MESSAGE_TYPE.OUTGOING,
     conversation_id: data.conversationId,
-    attachments: file ? tempAttachments : null,
+    attachments: tempAttachments,
   };
 
   return pendingMessage;
