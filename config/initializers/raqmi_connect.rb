@@ -1,8 +1,7 @@
 # Raqmi Connect fork behaviour, kept out of upstream files so an upstream merge cannot conflict with it.
 # Each module overrides by `prepend` + `super`; docs/FORK.md lists them and what each one relies on.
 #
-# Not the `custom/` extension folder: ChatwootApp.extensions loads `enterprise` with it and ignores
-# DISABLE_ENTERPRISE.
+# For upstream classes with no prepend_mod_with hook. New fork modules live in `custom/` (docs/FORK.md).
 Rails.application.config.to_prepare do
   ChatwootHub.singleton_class.prepend(RaqmiConnect::ChatwootHubSilence)
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappDispatchMarker)

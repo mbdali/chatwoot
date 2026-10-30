@@ -16,8 +16,7 @@ the checklist for merging a new upstream release into `master`.
 ## Behaviour added by prepend (no upstream file edited)
 
 All wired in `config/initializers/raqmi_connect.rb`. Each module overrides with `prepend` + `super`.
-Not the `custom/` extension folder: `ChatwootApp.extensions` loads `enterprise` with it and ignores
-`DISABLE_ENTERPRISE`.
+Used for upstream classes that have no `prepend_mod_with` hook; otherwise see the `custom/` folder below.
 
 | Module | Prepended to | Relies on upstream | Why |
 |---|---|---|---|
@@ -35,9 +34,25 @@ Shared rules: `RaqmiConnect::WhatsappDispatch`. Strings: `config/locales/raqmi_c
 The ERP contract (marker, prefixes, retry rule) is in `docs/api-integration-guide.md` §5.
 The production Docker build and deployment guide is in `docs/raqmiconnect-deployment.md`.
 
+## The `custom/` extension folder
+
+New fork modules (the complaints module, `docs/complaints-module-plan.md`) live in `custom/`, Chatwoot's own
+extension slot. `custom/app/<kind>/custom/<name>.rb` defines `Custom::<Name>`, which upstream's
+`prepend_mod_with` / `include_mod_with` hooks apply after the `Enterprise::` module; new fork classes live
+alongside under `custom/app/`. Accepted consequences:
+
+- With `custom/` present, `ChatwootApp.extensions` is always `%w[enterprise custom]`: `enterprise/` is loaded
+  and `DISABLE_ENTERPRISE` has no effect. Paid enterprise features stay gated by pricing plan and feature
+  flags; fork code never references `Enterprise::` classes or ports from `enterprise/` (separate licence).
+- Upstream autoloads only `enterprise/` paths, so `config/application.rb` carries a fork block adding
+  `custom/app/**`, `custom/lib` and `custom/app/views`, mirroring the enterprise lines.
+- A `Custom::` module relies on its upstream hook and on the methods it overrides, the same as a prepend row:
+  list each one in the table above with "via `prepend_mod_with`" in the "Prepended to" column.
+- `custom/` holds Ruby only. Fork Vue code stays under `app/javascript/` in fork-owned folders.
+
 ## Fork-owned files (new, never conflict)
 
-`app/**/raqmi_connect/`, `spec/**/*_raqmi_connect_spec.rb`, `config/initializers/raqmi_connect.rb`,
+`custom/`, `app/**/raqmi_connect/`, `spec/**/*_raqmi_connect_spec.rb`, `config/initializers/raqmi_connect.rb`,
 `config/initializers/custom_branding.rb`, `config/locales/raqmi_connect.en.yml`,
 `lib/custom_exceptions/message_retry_error.rb`, `lib/custom_exceptions/whatsapp_reaction_error.rb`,
 the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
@@ -46,7 +61,9 @@ brand assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
 
 ## Upstream files we still edit (can conflict on merge)
 
-Frontend and branding only; Ruby behaviour lives in prepended modules above.
+Frontend and branding, plus load paths for `custom/`; Ruby behaviour lives in prepended modules or `custom/`.
+
+- `config/application.rb`: the `custom/` load-path block, once the first `custom/` code lands
 
 - `app/javascript/dashboard/assets/scss/_next-colors.scss`, `_woot.scss`: brand colours
 - `app/javascript/dashboard/components-next/message/bubbles/File.vue`, `chips/File.vue`: PDF preview
