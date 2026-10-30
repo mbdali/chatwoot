@@ -21,6 +21,7 @@ export default {
           meta: {
             featureFlag: FEATURE_FLAGS.CUSTOM_ROLES,
             installationTypes: [
+              INSTALLATION_TYPES.COMMUNITY,
               INSTALLATION_TYPES.CLOUD,
               INSTALLATION_TYPES.ENTERPRISE,
             ],

@@ -30,6 +30,17 @@ Not the `custom/` extension folder: `ChatwootApp.extensions` loads `enterprise` 
 | `RaqmiConnect::WhatsappChannelReactions` | `Channel::Whatsapp` | `provider_service` | Delegates `send_reaction(phone, target_source_id, emoji)` to provider service |
 | `RaqmiConnect::WhatsappCloudReactions` | `Whatsapp::Providers::WhatsappCloudService` | `phone_id_path`, `api_headers`, `recipient_params` | Dispatches emoji reactions and removals (`emoji: ""`) to Meta WhatsApp Cloud API |
 | `RaqmiConnect::ChatwootHubSilence` | `ChatwootHub.singleton_class` | `sync_with_hub`, `register_instance`, `emit_event`, `send_push`, `support_config` | Completely silences all telemetry, registration, and version-check pings to `hub.2.chatwoot.com` |
+| `RaqmiConnect::AccountCustomRoles` | `Account` | `has_many :custom_roles` | Associates custom roles with an account |
+| `RaqmiConnect::AccountUserCustomRole` | `AccountUser` | `role`, `agent?`, `administrator?`, `permissions` | Resolves permissions array for custom-role agents |
+| `RaqmiConnect::AgentsControllerCustomRole` | `Api::V1::Accounts::AgentsController` | `create`, `update`, `@agent`, `User#current_account_user` | Assigns and clears `custom_role_id` on agent create/update |
+| `RaqmiConnect::ConversationPolicyCustomRole` | `ConversationPolicy` | `show?`, private `agent_can_view_conversation?`, `assigned_to_user?`, `participant?` | Enforces conversation permissions (`conversation_manage`, `conversation_unassigned_manage`, `conversation_participating_manage`) |
+| `RaqmiConnect::PermissionFilterCustomRole` | `Conversations::PermissionFilterService` | `perform`, `user`, `account`, private `account_user` | Filters conversation lists and search according to custom role permissions |
+| `RaqmiConnect::ContactPolicyCustomRole` | `ContactPolicy` | `index?`, `active?`, `search?`, `filter?`, `show?`, `create?`, `update?`, `avatar?`, `contactable_inboxes?`, `destroy_custom_attributes?` | Restricts contacts access without `contact_manage` |
+| `RaqmiConnect::ReportPolicyCustomRole` | `ReportPolicy` | `view?` | Grants report view access with `report_manage` |
+| `RaqmiConnect::CsatSurveyResponsePolicyCustomRole` | `CsatSurveyResponsePolicy` | `index?`, `metrics?`, `download?` | Grants CSAT survey access with `report_manage` |
+| `RaqmiConnect::HelpCenterPolicyCustomRole` | `PortalPolicy`, `ArticlePolicy`, `CategoryPolicy` | `index?`, `show?`, `create?`, `update?`, `edit?`, `destroy?`, `reorder?`, `logo?`, `send_instructions?`, `ssl_status?` | Manages Help Center access with `knowledge_base_manage` |
+
+Constants defined when `enterprise/` is absent: `::CustomRole` (`RaqmiConnect::CustomRole`), `::CustomRolePolicy` (`RaqmiConnect::CustomRolePolicy`), and `Api::V1::Accounts::CustomRolesController` (`RaqmiConnect::CustomRolesController`).
 
 Shared rules: `RaqmiConnect::WhatsappDispatch`. Strings: `config/locales/raqmi_connect.en.yml`.
 The ERP contract (marker, prefixes, retry rule) is in `docs/api-integration-guide.md` §5.
@@ -40,19 +51,22 @@ The production Docker build and deployment guide is in `docs/raqmiconnect-deploy
 `app/**/raqmi_connect/`, `spec/**/*_raqmi_connect_spec.rb`, `config/initializers/raqmi_connect.rb`,
 `config/initializers/custom_branding.rb`, `config/locales/raqmi_connect.en.yml`,
 `lib/custom_exceptions/message_retry_error.rb`, `lib/custom_exceptions/whatsapp_reaction_error.rb`,
-the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
+`lib/tasks/raqmi_connect.rake`, `app/views/api/v1/models/_account_user.json.jbuilder`,
+`app/views/raqmi_connect/custom_roles/`, the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
 messages report (`MessagesReport.vue`, `messageReports.js`), conversation search components,
 brand assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
 
 ## Upstream files we still edit (can conflict on merge)
 
-Frontend and branding only; Ruby behaviour lives in prepended modules above.
+Frontend, branding, and minimal view guards; Ruby behaviour lives in prepended modules above.
 
 - `app/javascript/dashboard/assets/scss/_next-colors.scss`, `_woot.scss`: brand colours
 - `app/javascript/dashboard/components-next/message/bubbles/File.vue`, `chips/File.vue`: PDF preview
 - `app/javascript/dashboard/components-next/message/Message.vue`: reaction badges and hover reaction trigger
 - `app/javascript/dashboard/components-next/sidebar/Sidebar.vue`: Messages report link in navigation
 - `app/javascript/dashboard/routes/dashboard/settings/reports/reports.routes.js`: Messages report route definition
+- `app/javascript/dashboard/routes/dashboard/settings/customRoles/customRole.routes.js`: community installation type for custom roles
+- `app/views/api/v1/models/_agent.json.jbuilder`, `app/views/api/v1/models/_user.json.jbuilder`: custom role reflection guards
 - `app/javascript/dashboard/components/ChatList.vue`, `i18n/locale/en/chatlist.json`: in-place search
 - `app/javascript/dashboard/i18n/locale/en/conversation.json`, `app/javascript/entrypoints/dashboard.js`
 - `app/javascript/dashboard/i18n/locale/en/report.json`: `MESSAGES_REPORT` copy

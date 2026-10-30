@@ -43,6 +43,9 @@ Build the production image using the project's production Dockerfile (`docker/Do
 
 > [!IMPORTANT]
 > If building on an Apple Silicon (M1/M2/M3/M4) Mac or ARM workstation, explicitly specify `--platform linux/amd64` to match standard x86 production servers.
+>
+> Production images are built without `enterprise/` (excluded via `.dockerignore`) so the MIT custom roles backend activates.
+> `DISABLE_ENTERPRISE` is not a substitute (and fails boot if the directory is present).
 
 ```bash
 cd /path/to/chatwoot
@@ -149,8 +152,15 @@ docker compose -f docker-compose.production.yaml up -d --no-deps rails sidekiq
    docker compose ps
    ```
 
-4. **Verify Application Endpoints:**
-   - Log into Dashboard: Navigate to **Reports** → **Messages** to confirm the Messages Report is live.
+4. **Enable Custom Roles Feature Flag:**
+   - To enable custom roles for an account (or all accounts):
+     ```bash
+     docker compose -f docker-compose.production.yaml exec rails bundle exec rake raqmi_connect:enable_custom_roles[<account_id>]
+     ```
+
+5. **Verify Application Endpoints:**
+   - Log into Dashboard: Navigate to **Settings** → **Custom Roles** to create and assign roles.
+   - Navigate to **Reports** → **Messages** to confirm the Messages Report is live.
    - Send a test WhatsApp reaction to verify webhook and outbound Cloud API dispatch.
 
 ---
