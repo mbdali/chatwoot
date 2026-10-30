@@ -10,6 +10,7 @@ services:
       - ./config:/app/config
       - ./lib/tasks:/app/lib/tasks
       - ./theme:/app/theme
+      - ./public/vite:/app/public/vite
 
   sidekiq:
     volumes:

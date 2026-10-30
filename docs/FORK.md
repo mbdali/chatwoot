@@ -39,6 +39,7 @@ Not the `custom/` extension folder: `ChatwootApp.extensions` loads `enterprise` 
 | `RaqmiConnect::ReportPolicyCustomRole` | `ReportPolicy` | `view?` | Grants report view access with `report_manage` |
 | `RaqmiConnect::CsatSurveyResponsePolicyCustomRole` | `CsatSurveyResponsePolicy` | `index?`, `metrics?`, `download?` | Grants CSAT survey access with `report_manage` |
 | `RaqmiConnect::HelpCenterPolicyCustomRole` | `PortalPolicy`, `ArticlePolicy`, `CategoryPolicy` | `index?`, `show?`, `create?`, `update?`, `edit?`, `destroy?`, `reorder?`, `logo?`, `send_instructions?`, `ssl_status?` | Manages Help Center access with `knowledge_base_manage` |
+| `RaqmiConnect::AccountDashboard` | `AccountDashboard` | `attribute_types`, `show_page_attributes`, `form_attributes`, `permitted_attributes` | Exposes features and limits management tabs and fields in Super Admin without Enterprise |
 
 Constants defined when `enterprise/` is absent: `::CustomRole` (`RaqmiConnect::CustomRole`), `::CustomRolePolicy` (`RaqmiConnect::CustomRolePolicy`), and `Api::V1::Accounts::CustomRolesController` (`RaqmiConnect::CustomRolesController`).
 
@@ -52,7 +53,9 @@ The production Docker build and deployment guide is in `docs/raqmiconnect-deploy
 `config/initializers/custom_branding.rb`, `config/locales/raqmi_connect.en.yml`,
 `lib/custom_exceptions/message_retry_error.rb`, `lib/custom_exceptions/whatsapp_reaction_error.rb`,
 `lib/tasks/raqmi_connect.rake`, `app/views/api/v1/models/_account_user.json.jbuilder`,
-`app/views/raqmi_connect/custom_roles/`, the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
+`app/views/raqmi_connect/custom_roles/`, `app/fields/account_features_field.rb`,
+`app/fields/account_limits_field.rb`, `app/views/fields/account_features_field/`,
+`app/views/fields/account_limits_field/`, the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
 messages report (`MessagesReport.vue`, `messageReports.js`), conversation search components,
 brand assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
 

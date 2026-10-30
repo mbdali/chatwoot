@@ -48,6 +48,7 @@ Rails.application.config.to_prepare do
     PortalPolicy.prepend(RaqmiConnect::HelpCenterPolicyCustomRole)
     ArticlePolicy.prepend(RaqmiConnect::HelpCenterPolicyCustomRole)
     CategoryPolicy.prepend(RaqmiConnect::HelpCenterPolicyCustomRole)
+    AccountDashboard.prepend(RaqmiConnect::AccountDashboard)
   else
     Rails.logger.info('[RaqmiConnect] enterprise/ present; fork custom roles inactive')
   end
