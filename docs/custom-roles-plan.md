@@ -62,7 +62,7 @@ flowchart TD
 | `app/javascript/dashboard/api/customRole.js`, `store/modules/customRole.js` and its specs/fixtures | Request and response shape of the CRUD API |
 | `EditAgent.vue:131-135`, `AddAgent.vue` | `custom_role_id` is sent as a **top-level** param on agent create/update; `null` clears it |
 | `app/views/api/v1/models/_agent.json.jbuilder:14` | Agent payload carries `custom_role_id` |
-| `app/views/api/v1/models/_user.json.jbuilder:3,44` | Profile payload carries `account_user.permissions` (drives frontend route `permissions` meta) |
+| `app/views/api/v1/models/_user.json.jbuilder:3,44,51` | Profile payload carries `account_user.permissions` (drives frontend route `permissions` meta) and renders `_account_user` partial |
 | `app/services/conversations/unread_counts/counter.rb` | Permission names `conversation_manage`, `conversation_unassigned_manage`, `conversation_participating_manage`; a custom role applies only when `account_user.agent? && custom_role_id.present?` |
 | `lib/seeders/seed_data.yml`, `spec/factories/custom_roles.rb` | Remaining permission names and sample roles |
 
@@ -166,14 +166,21 @@ Rails conventions and the existing route, not from enterprise sources. Reviewers
      feature is off for the account is rejected; clearing is always allowed.
    - Relies on upstream `create`, `update`, `@agent`, and `User#current_account_user` (list these in FORK.md).
 
-4. **Agent and profile payloads**: `_agent.json.jbuilder:14` and `_user.json.jbuilder:3` include custom role data
-   only `if ChatwootApp.enterprise?`, so with enterprise off `EditAgent` never gets `customRoleId`. Views can't
-   be prepended, so edit the guard expression in both partials (nothing else) to test for the association, which
-   either enterprise or the fork defines:
+4. **Agent and profile payloads**: `_agent.json.jbuilder:14` and `_user.json.jbuilder:3,51` include custom role data
+   only `if ChatwootApp.enterprise?`, so with enterprise off `EditAgent` never gets `customRoleId`, and the
+   account payload never receives `custom_role_id` or `custom_role`. Furthermore, `_account_user.json.jbuilder`
+   only exists inside `enterprise/`. Views can't be prepended, so edit the guard expressions in both partials to
+   test for the association, and provide an OSS partial:
    - `_agent.json.jbuilder:14`: `… if AccountUser.reflect_on_association(:custom_role)`
    - `_user.json.jbuilder:3`: `account_users = account_users.includes(:custom_role) if AccountUser.reflect_on_association(:custom_role)`
+   - `_user.json.jbuilder:51`: `json.partial! 'api/v1/models/account_user', account_user: account_user if AccountUser.reflect_on_association(:custom_role)`
+   - Create `app/views/api/v1/models/_account_user.json.jbuilder` (fork-owned, in root OSS tree):
+     ```ruby
+     json.custom_role_id account_user&.custom_role_id
+     json.custom_role account_user&.custom_role&.as_json(only: [:id, :name, :description, :permissions])
+     ```
 
-   Behaviour with enterprise on is unchanged. Both partials go on FORK.md's "Upstream files we still edit" list.
+   Behaviour with enterprise on is unchanged. Both edited upstream partials go on FORK.md's "Upstream files we still edit" list.
 
 ---
 
@@ -266,7 +273,7 @@ through `super`, so upstream behaviour is unchanged for them.
    - Add the fork-defined top-level constants to a short "Constants defined when enterprise is off" note.
    - Add to "Upstream files we still edit": `customRoles/customRole.routes.js`, `_agent.json.jbuilder`,
      `_user.json.jbuilder` (and `Index.vue` only if Phase 4.3 needed it).
-   - Add `lib/tasks/raqmi_connect.rake` to fork-owned files if it's new.
+   - Add `lib/tasks/raqmi_connect.rake` and `app/views/api/v1/models/_account_user.json.jbuilder` to fork-owned files.
 3. **`docs/raqmiconnect-deployment.md`**: make `DISABLE_ENTERPRISE=true` required and explain why (§2.2), and add
    the step to enable the `custom_roles` flag.
 
