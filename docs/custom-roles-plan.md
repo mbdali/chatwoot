@@ -16,8 +16,9 @@ MIT contract.
 - **Fork rules**: follow [`docs/FORK.md`](./FORK.md) and [`AGENTS.md`](../AGENTS.md). Backend behaviour lives in
   `app/**/raqmi_connect/` (plus the controller in §3.2.1), added with `prepend` + `super` and wired in
   [`config/initializers/raqmi_connect.rb`](../config/initializers/raqmi_connect.rb).
-- **Fork backend only when enterprise is off**: every class, prepend and association in this plan is registered
-  only when `!ChatwootApp.enterprise?`. Production runs with `DISABLE_ENTERPRISE=true` (see §2.2).
+- **Fork backend only when `enterprise/` is absent**: every class, prepend and association in this plan is
+  registered only when the `enterprise/` directory does not exist. Production images are built without it
+  (see §2.2). `DISABLE_ENTERPRISE=true` alone is **not** enough.
 - **Clean room**: see §2.3.
 - **Upstream edits are listed**: every upstream file this plan edits is added to "Upstream files we still edit" in
   FORK.md (§3.5).
@@ -73,16 +74,34 @@ Enterprise already defines `::CustomRole`, `CustomRolePolicy`, `Api::V1::Account
 `Conversations::PermissionFilterService`. Loading both would double-filter, double-authorize and redefine
 associations.
 
-Rule: **the fork backend activates only when `ChatwootApp.enterprise?` is false.** The `enterprise/` code and
+**`DISABLE_ENTERPRISE` does not unload enterprise code.** It only makes `ChatwootApp.enterprise?` return
+false. `config/application.rb:43-53` runs regardless of it:
+- it unshifts `enterprise/app/views` ahead of `app/views` (enterprise partials win),
+- it adds `enterprise/app/**` and `enterprise/lib` to the eager-load paths (`::CustomRole`,
+  `CustomRolePolicy`, `Api::V1::Accounts::CustomRolesController` get defined from `enterprise/`),
+- it requires every file in `enterprise/config/initializers`.
+
+So with the directory present and the flag set, enterprise code still runs, and the fork's constants would
+collide with, or be shadowed by, the enterprise ones.
+
+Rule: **the fork backend activates only when the `enterprise/` directory is absent.** The `enterprise/` code and
 the fork code never run together.
 
+- Define `RaqmiConnect.custom_roles?` as `!Rails.root.join('enterprise').exist?`. `ChatwootApp.enterprise?` is
+  then false too, so the upstream `if ChatwootApp.enterprise?` branches stay off.
+- **Mixed state fails boot**: if `enterprise/` exists **and** `DISABLE_ENTERPRISE` is set, the fork initializer
+  raises with a message telling the operator to build without `enterprise/`. This state looks MIT-only but
+  isn't, so it must not boot silently.
+- With `enterprise/` present and the flag unset (upstream default, local dev), the fork backend stays inactive
+  and the initializer logs one line saying so.
 - Fork constants that must have upstream's top-level names (`CustomRole`, `CustomRolePolicy`,
-  `Api::V1::Accounts::CustomRolesController`) live in files under `app/**/raqmi_connect/` and are defined by the
-  initializer only when enterprise is off (e.g. `RaqmiConnect::CustomRole` assigned to `::CustomRole` with
-  `Object.const_set` unless `Object.const_defined?(:CustomRole, false)`).
-- `docs/raqmiconnect-deployment.md` documents `DISABLE_ENTERPRISE=true` as **required** for production, and
-  says the Docker image may omit `enterprise/` entirely.
-- On boot with enterprise on, the initializer logs one line saying fork custom roles are inactive.
+  `Api::V1::Accounts::CustomRolesController`) live in files under `app/**/raqmi_connect/` and are bound by the
+  initializer only when `RaqmiConnect.custom_roles?` (e.g. `Object.const_set(:CustomRole, RaqmiConnect::CustomRole)`).
+  With the directory absent nothing else can define them, so no `const_defined?` guard is needed.
+- **Production build**: add `enterprise/` and `spec/enterprise/` to `.dockerignore` (the image copies the
+  context with `COPY . /app` in `docker/Dockerfile:79`). Both files are already on FORK.md's edited-upstream list.
+  Production today sets no `DISABLE_ENTERPRISE`, so the current image runs enterprise code. Building without
+  the directory changes that, and the rollout must be checked for any other enterprise feature in use.
 
 ### 2.3 Clean-room rule
 
@@ -174,13 +193,27 @@ Rails conventions and the existing route, not from enterprise sources. Reviewers
    - `_agent.json.jbuilder:14`: `… if AccountUser.reflect_on_association(:custom_role)`
    - `_user.json.jbuilder:3`: `account_users = account_users.includes(:custom_role) if AccountUser.reflect_on_association(:custom_role)`
    - `_user.json.jbuilder:51`: `json.partial! 'api/v1/models/account_user', account_user: account_user if AccountUser.reflect_on_association(:custom_role)`
-   - Create `app/views/api/v1/models/_account_user.json.jbuilder` (fork-owned, in root OSS tree):
+   - Create `app/views/api/v1/models/_account_user.json.jbuilder` (fork-owned). It must sit at that path because
+     line 51 renders it by name. Write it from what the frontend reads, not from the enterprise file (§2.3):
+     `SidebarAccountSwitcher.vue:126` reads `account.custom_role.name`, and the store and specs use
+     `custom_role_id`. Emit `custom_role_id`, plus a `custom_role` object (`id`, `name`, `description`,
+     `permissions`) or `null` when there's no role:
      ```ruby
-     json.custom_role_id account_user&.custom_role_id
-     json.custom_role account_user&.custom_role&.as_json(only: [:id, :name, :description, :permissions])
-     ```
+     custom_role = account_user.custom_role
 
-   Behaviour with enterprise on is unchanged. Both edited upstream partials go on FORK.md's "Upstream files we still edit" list.
+     json.custom_role_id account_user.custom_role_id
+     if custom_role
+       json.custom_role do
+         json.extract! custom_role, :id, :name, :description, :permissions
+       end
+     else
+       json.custom_role nil
+     end
+     ```
+     It only renders when `enterprise/` is absent. With the directory present, `enterprise/app/views` comes first
+     in the view paths and its own partial wins, so behaviour with enterprise on is unchanged.
+
+   Both edited upstream partials go on FORK.md's "Upstream files we still edit" list.
 
 ---
 
@@ -250,8 +283,12 @@ through `super`, so upstream behaviour is unchanged for them.
 
 1. **`config/initializers/raqmi_connect.rb`**, inside the existing `to_prepare` block:
    ```ruby
-   unless ChatwootApp.enterprise?
-     Object.const_set(:CustomRole, RaqmiConnect::CustomRole) unless Object.const_defined?(:CustomRole, false)
+   if Rails.root.join('enterprise').exist? && ENV.fetch('DISABLE_ENTERPRISE', false)
+     raise 'DISABLE_ENTERPRISE still loads enterprise/ code; build without the enterprise/ directory instead'
+   end
+
+   if RaqmiConnect.custom_roles?
+     Object.const_set(:CustomRole, RaqmiConnect::CustomRole)
      # … same for CustomRolePolicy and Api::V1::Accounts::CustomRolesController
      Account.prepend(RaqmiConnect::AccountCustomRoles)
      AccountUser.prepend(RaqmiConnect::AccountUserCustomRole)
@@ -264,18 +301,22 @@ through `super`, so upstream behaviour is unchanged for them.
      PortalPolicy.prepend(RaqmiConnect::HelpCenterPolicyCustomRole)
      ArticlePolicy.prepend(RaqmiConnect::HelpCenterPolicyCustomRole)
      CategoryPolicy.prepend(RaqmiConnect::HelpCenterPolicyCustomRole)
+   else
+     Rails.logger.info('[RaqmiConnect] enterprise/ present; fork custom roles inactive')
    end
    ```
-   No route changes.
+   The mixed-state check runs once at boot, outside `to_prepare`. No route changes.
 2. **`docs/FORK.md`**:
    - Add a row to "Behaviour added by prepend" for each module above, with the upstream methods it relies on
      (from each phase's "Relies on" notes).
-   - Add the fork-defined top-level constants to a short "Constants defined when enterprise is off" note.
+   - Add the fork-defined top-level constants to a short "Constants defined when `enterprise/` is absent" note.
+   - Add `.dockerignore`'s `enterprise/` and `spec/enterprise/` entries to its line in "Upstream files we still edit".
    - Add to "Upstream files we still edit": `customRoles/customRole.routes.js`, `_agent.json.jbuilder`,
      `_user.json.jbuilder` (and `Index.vue` only if Phase 4.3 needed it).
    - Add `lib/tasks/raqmi_connect.rake` and `app/views/api/v1/models/_account_user.json.jbuilder` to fork-owned files.
-3. **`docs/raqmiconnect-deployment.md`**: make `DISABLE_ENTERPRISE=true` required and explain why (§2.2), and add
-   the step to enable the `custom_roles` flag.
+3. **`docs/raqmiconnect-deployment.md`**: state that production images are built without `enterprise/`, that
+   `DISABLE_ENTERPRISE` is not a substitute (and fails boot if the directory is present), and why (§2.2). Add the
+   step to enable the `custom_roles` flag.
 
 ---
 
@@ -300,14 +341,18 @@ through `super`, so upstream behaviour is unchanged for them.
      policy for each permission, and match `UnreadCounts::Counter` totals.
    - `spec/policies/raqmi_connect/{contact,report,csat_survey_response,help_center}_policy_custom_role_raqmi_connect_spec.rb`:
      the grant/restrict table in §3.3.3.
-   - `spec/views/raqmi_connect/agent_payload_raqmi_connect_spec.rb`: agent JSON includes `custom_role_id` with
-     enterprise off.
-2. **License isolation**: run the fork specs with `DISABLE_ENTERPRISE=true`, and once in a checkout with
-   `enterprise/` deleted, to prove there's no dependency on it. Also boot with enterprise **on** and check that
-   the fork modules are not prepended (one spec on `AccountUser.ancestors`).
+   - `spec/views/raqmi_connect/custom_role_payloads_raqmi_connect_spec.rb`: agent JSON includes `custom_role_id`,
+     and profile JSON `accounts[]` includes `custom_role_id` and `custom_role` (`name` etc.; `null` with no role).
+2. **License isolation**: the fork's custom role specs only make sense with `enterprise/` absent, so they are
+   tagged and skipped when the directory exists.
+   - CI gets a dedicated job that runs `rm -rf enterprise spec/enterprise` and then the fork specs plus the
+     upstream specs for prepended classes. This is the real proof that nothing depends on `enterprise/`. Locally,
+     run it in a separate `git worktree` with the directories deleted.
+   - With `enterprise/` present: one spec checks `AccountUser.ancestors` excludes the fork modules, and one checks
+     that setting `DISABLE_ENTERPRISE` raises at boot (the mixed state in §2.2).
 3. **Upstream regressions**: run the upstream specs for every prepended class (`account_user`, agents controller,
    the policies, `permission_filter_service`, `unread_counts`).
-4. **Manual check** (enterprise off, flag on):
+4. **Manual check** (image built without `enterprise/`, flag on):
    - Create a role with only `conversation_participating_manage`, and assign it to an agent.
    - As that agent: lists, unread badges and direct URLs show only assigned or participating conversations.
      Opening another conversation's URL is refused (401).
@@ -321,7 +366,8 @@ through `super`, so upstream behaviour is unchanged for them.
 
 | Potential Risk | Impact | Mitigation Strategy |
 | :--- | :--- | :--- |
-| **Fork and enterprise both active** | High | Fork registers only when `!ChatwootApp.enterprise?`; `DISABLE_ENTERPRISE=true` required in production; ancestors spec (§4.2). |
+| **Fork and enterprise both active** | High | Fork registers only when `enterprise/` is absent; production images exclude it via `.dockerignore`; `DISABLE_ENTERPRISE` with the directory present fails boot; ancestors spec and the deleted-directory CI job (§4.2). |
+| **Removing `enterprise/` drops other enterprise features in use** | Medium | Before the first image without it, list enterprise features enabled on production accounts and confirm none are needed (§2.2). |
 | **Policy method left to `super` by accident** | High | §3.3.3 checklist of every public method; request specs for denied paths. |
 | **Cross-account role assignment** | High | Look up the role through `Current.account.custom_roles`; spec. |
 | **Upstream renames a method a prepend relies on** | Medium | It won't conflict, it silently disables the override. FORK.md lists every relied-on method; the fork specs fail. |
