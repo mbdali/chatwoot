@@ -5,7 +5,7 @@ module RaqmiConnect::AccountUserCustomRole
   extend ActiveSupport::Concern
 
   prepended do
-    belongs_to :custom_role, class_name: 'CustomRole', optional: true
+    belongs_to :custom_role, class_name: '::CustomRole', optional: true
   end
 
   def permissions

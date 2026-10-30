@@ -5,6 +5,6 @@ module RaqmiConnect::AccountCustomRoles
   extend ActiveSupport::Concern
 
   prepended do
-    has_many :custom_roles, class_name: 'CustomRole', dependent: :destroy_async
+    has_many :custom_roles, class_name: '::CustomRole', dependent: :destroy_async
   end
 end
