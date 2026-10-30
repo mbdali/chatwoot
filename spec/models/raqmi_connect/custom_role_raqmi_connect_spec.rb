@@ -54,7 +54,7 @@ RSpec.describe RaqmiConnect::CustomRole, type: :model do
       user.account_users.first.update!(custom_role_id: role.id)
 
       expect(Rails.configuration.dispatcher).to receive(:dispatch).with(
-        ACCOUNT_CACHE_INVALIDATED,
+        Events::Types::ACCOUNT_CACHE_INVALIDATED,
         anything,
         account: account,
         cache_keys: account.cache_keys
@@ -68,7 +68,7 @@ RSpec.describe RaqmiConnect::CustomRole, type: :model do
       user.account_users.first.update!(custom_role_id: role.id)
 
       expect(Rails.configuration.dispatcher).to receive(:dispatch).with(
-        ACCOUNT_CACHE_INVALIDATED,
+        Events::Types::ACCOUNT_CACHE_INVALIDATED,
         anything,
         account: account,
         cache_keys: account.cache_keys

@@ -9,11 +9,17 @@ services:
       - ./app:/app/app
       - ./config:/app/config
       - ./lib/tasks:/app/lib/tasks
+      - ./spec:/app/spec
       - ./theme:/app/theme
       - ./public/vite:/app/public/vite
+      - gems_data:/gems
 
   sidekiq:
     volumes:
       - ./app:/app/app
       - ./config:/app/config
       - ./lib/tasks:/app/lib/tasks
+      - gems_data:/gems
+
+volumes:
+  gems_data:

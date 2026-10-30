@@ -14,6 +14,9 @@ RSpec.describe RaqmiConnect::PermissionFilterCustomRole do
     end
   end
 
+  let!(:agent_inbox_member) { create(:inbox_member, inbox: inbox, user: agent) }
+  let!(:other_agent_inbox_member) { create(:inbox_member, inbox: inbox, user: other_agent) }
+
   let!(:unassigned_conv) { create(:conversation, account: account, inbox: inbox, assignee: nil) }
   let!(:assigned_to_me) { create(:conversation, account: account, inbox: inbox, assignee: agent) }
   let!(:assigned_to_other) { create(:conversation, account: account, inbox: inbox, assignee: other_agent) }
@@ -21,11 +24,6 @@ RSpec.describe RaqmiConnect::PermissionFilterCustomRole do
     conv = create(:conversation, account: account, inbox: inbox, assignee: other_agent)
     conv.conversation_participants.create!(user: agent)
     conv
-  end
-
-  before do
-    create(:inbox_member, inbox: inbox, user: agent)
-    create(:inbox_member, inbox: inbox, user: other_agent)
   end
 
   def filter_conversations(user)
