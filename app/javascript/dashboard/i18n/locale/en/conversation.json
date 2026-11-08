@@ -629,5 +629,34 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Unable to download attachment. Please try again"
+  },
+  "WHATSAPP_GROUPS": {
+    "CREATE_GROUP": "Create WhatsApp Group",
+    "CREATE_GROUP_TITLE": "Create WhatsApp Group",
+    "CREATE_GROUP_DESC": "Create a WhatsApp group for multi-party support on your verified WhatsApp Cloud number.",
+    "SUBJECT_LABEL": "Group Subject",
+    "SUBJECT_PLACEHOLDER": "e.g. VIP Client Project Room",
+    "DESCRIPTION_LABEL": "Group Description (Optional)",
+    "DESCRIPTION_PLACEHOLDER": "Brief purpose of the group",
+    "AUTO_INVITE_LABEL": "Automatically send invite link in the current conversation",
+    "CREATE_BUTTON": "Create Group",
+    "CREATING_BUTTON": "Creating Group...",
+    "CANCEL": "Cancel",
+    "CLOSE": "Close",
+    "COPY": "Copy",
+    "GROUP_CREATED_TITLE": "Group Ready!",
+    "GROUP_READY_DESC": "Your WhatsApp group is created. Share the invite link with participants.",
+    "INVITE_LINK_LABEL": "Group Invite Link",
+    "LINK_PENDING": "Generating invite link...",
+    "COPY_INVITE_LINK": "Copy Invite Link",
+    "LINK_COPIED": "Invite link copied to clipboard!",
+    "GROUP_CREATED_SUCCESS": "WhatsApp group created successfully!",
+    "CREATE_FAILED": "Failed to create WhatsApp group",
+    "INVITE_SENT_NOTICE": "Invite link was sent to customer in conversation.",
+    "OPEN_GROUP_CONVERSATION": "Open Group Conversation",
+    "GROUP_INFO_TITLE": "WhatsApp Group",
+    "ACTIVE_BADGE": "Multi-party",
+    "GROUP_SECTION_TITLE": "WhatsApp Groups",
+    "GROUP_SECTION_DESC": "Create an invite-only WhatsApp group for multi-party support with this contact."
   }
 }

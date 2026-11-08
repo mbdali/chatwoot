@@ -56,10 +56,11 @@ The production Docker build and deployment guide is in `docs/raqmiconnect-deploy
 `app/**/raqmi_connect/`, `spec/**/*_raqmi_connect_spec.rb`, `config/initializers/raqmi_connect.rb`,
 `config/initializers/custom_branding.rb`, `config/locales/raqmi_connect.en.yml`,
 `lib/custom_exceptions/message_retry_error.rb`, `lib/custom_exceptions/whatsapp_reaction_error.rb`,
-`lib/tasks/raqmi_connect.rake`, `app/views/api/v1/models/_account_user.json.jbuilder`,
+`lib/custom_exceptions/whatsapp_group_error.rb`, `lib/tasks/raqmi_connect.rake`, `app/views/api/v1/models/_account_user.json.jbuilder`,
 `app/views/raqmi_connect/custom_roles/`, `app/fields/account_features_field.rb`,
 `app/fields/account_limits_field.rb`, `app/views/fields/account_features_field/`,
 `app/views/fields/account_limits_field/`, the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
+WhatsApp groups (`CreateWhatsappGroupModal.vue`, `WhatsappGroupCard.vue`, `whatsappGroupsAPI.js`),
 messages report (`MessagesReport.vue`, `messageReports.js`), conversation search components,
 brand assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
 
@@ -70,6 +71,7 @@ Frontend, branding, and minimal view guards; Ruby behaviour lives in prepended m
 - `app/javascript/dashboard/assets/scss/_next-colors.scss`, `_woot.scss`: brand colours
 - `app/javascript/dashboard/components-next/message/bubbles/File.vue`, `chips/File.vue`: PDF preview
 - `app/javascript/dashboard/components-next/message/Message.vue`: reaction badges and hover reaction trigger
+- `app/javascript/dashboard/routes/dashboard/conversation/ContactPanel.vue`: WhatsApp group details and creation CTA
 - `app/javascript/dashboard/components-next/sidebar/Sidebar.vue`: Messages report link in navigation
 - `app/javascript/dashboard/routes/dashboard/settings/reports/reports.routes.js`: Messages report route definition
 - `app/javascript/dashboard/routes/dashboard/settings/customRoles/customRole.routes.js`: community installation type for custom roles

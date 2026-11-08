@@ -66,6 +66,7 @@ Rails.application.config.after_initialize do
           namespace :reports do
             get :messages, to: '/raqmi_connect/message_reports#show'
           end
+          resources :whatsapp_groups, only: [:create], controller: '/raqmi_connect/whatsapp_groups'
           resources :conversations, only: [] do
             scope module: :conversations do
               resources :messages, only: [] do
