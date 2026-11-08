@@ -6,13 +6,19 @@
 # Adds dispatch of emoji reactions to Meta WhatsApp Cloud API.
 module RaqmiConnect::WhatsappCloudReactions
   def send_reaction(phone_number, target_source_id, emoji)
+    is_group = RaqmiConnect::WhatsappGroupHelper.group_identifier?(phone_number)
+    recipient_hash = if is_group
+                       { recipient_type: 'group', to: phone_number }
+                     else
+                       { recipient_type: 'individual', **recipient_params(phone_number) }
+                     end
+
     response = HTTParty.post(
       "#{phone_id_path}/messages",
       headers: api_headers,
       body: {
         messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        **recipient_params(phone_number),
+        **recipient_hash,
         type: 'reaction',
         reaction: {
           message_id: target_source_id,

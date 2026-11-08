@@ -18,10 +18,13 @@ end
 
 Rails.application.config.to_prepare do
   ChatwootHub.singleton_class.prepend(RaqmiConnect::ChatwootHubSilence)
+  Webhooks::WhatsappEventsJob.prepend(RaqmiConnect::WhatsappEventsJobGroupLock)
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappDispatchMarker)
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappChannelReactions)
   Whatsapp::IncomingMessageBaseService.prepend(RaqmiConnect::WhatsappIncomingReaction)
+  Whatsapp::IncomingMessageBaseService.prepend(RaqmiConnect::WhatsappIncomingGroupMessage)
   Whatsapp::Providers::WhatsappCloudService.prepend(RaqmiConnect::WhatsappCloudReactions)
+  Whatsapp::Providers::WhatsappCloudService.prepend(RaqmiConnect::WhatsappCloudGroupDispatch)
   Whatsapp::SendOnWhatsappService.prepend(RaqmiConnect::WhatsappDispatchFailure)
   Whatsapp::Providers::BaseService.prepend(RaqmiConnect::WhatsappProviderErrorClassification)
   SendReplyJob.prepend(RaqmiConnect::SendReplyJobDispatchFailure)

@@ -4,7 +4,8 @@
 # Zero schema changes: stores array of reactions in existing content_attributes JSON column.
 module RaqmiConnect
   class WhatsappReactionHandler
-    pattr_initialize [:inbox!, :target_source_id, :target_message, :emoji, :actor, :actor_type, :source_id, :timestamp]
+    pattr_initialize [:inbox!, :target_source_id, :target_message, :emoji, :actor, :actor_type, :source_id, :timestamp,
+                      { actor_id: nil, actor_name: nil }]
 
     def perform
       message = target_message || find_target_message
@@ -14,8 +15,9 @@ module RaqmiConnect
         attrs = (message.content_attributes || {}).deep_dup
         reactions = Array(attrs['reactions'] || attrs[:reactions]).map { |r| r.to_h.deep_stringify_keys }
 
-        actor_id_val = actor&.id
+        actor_id_val = actor_id.presence || actor&.id
         effective_type = actor_type.to_s
+        effective_name = actor_name.presence || actor&.name || default_actor_name(effective_type)
 
         existing_index = reactions.find_index do |r|
           matches_actor?(r, effective_type, actor_id_val)
@@ -28,7 +30,7 @@ module RaqmiConnect
             'emoji' => clean_emoji,
             'actor_type' => effective_type,
             'actor_id' => actor_id_val,
-            'actor_name' => actor&.name || default_actor_name(effective_type),
+            'actor_name' => effective_name,
             'source_id' => source_id,
             'created_at' => formatted_timestamp
           }.compact
@@ -56,7 +58,7 @@ module RaqmiConnect
       return false unless reaction['actor_type'].to_s == effective_type
 
       if actor_id_val.present?
-        reaction['actor_id'] == actor_id_val
+        reaction['actor_id'].to_s == actor_id_val.to_s
       else
         reaction['actor_id'].nil?
       end
