@@ -18,6 +18,7 @@ end
 
 Rails.application.config.to_prepare do
   ChatwootHub.singleton_class.prepend(RaqmiConnect::ChatwootHubSilence)
+  ContactInbox.prepend(RaqmiConnect::ContactInboxGroupValidation)
   Webhooks::WhatsappEventsJob.prepend(RaqmiConnect::WhatsappEventsJobGroupLock)
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappDispatchMarker)
   Channel::Whatsapp.prepend(RaqmiConnect::WhatsappChannelReactions)

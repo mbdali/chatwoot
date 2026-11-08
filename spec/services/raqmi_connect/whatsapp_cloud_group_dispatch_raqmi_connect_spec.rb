@@ -62,11 +62,8 @@ describe RaqmiConnect::WhatsappCloudGroupDispatch do
           type: 'template',
           template: {
             name: 'sample_group_template',
-            language: { code: 'en_US', policy: 'deterministic' },
-            components: [{
-              type: 'body',
-              parameters: [{ type: 'text', text: 'Welcome' }]
-            }]
+            language: { policy: 'deterministic', code: 'en_US' },
+            components: ['Welcome']
           }
         }.to_json)
         .to_return(
