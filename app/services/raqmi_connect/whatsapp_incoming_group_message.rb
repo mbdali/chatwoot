@@ -5,8 +5,8 @@
 # Intercepts WhatsApp group messages, lifecycle events, and participant events:
 # 1. Resolves/creates a single Group Contact & ContactInbox using the group_id so all
 #    participants share the exact same conversation thread.
-# 2. Enriches incoming group messages with sender metadata in content_attributes and prefixes
-#    the message content with [Sender Name] for clear agent visibility across all platforms.
+# 2. Formats incoming group messages before DB save: attaches sender metadata in content_attributes
+#    and prefixes content with [Sender Name] for clear agent visibility across all platforms in a single atomic INSERT.
 # 3. Handles group lifecycle (create/delete) and participant (join/leave) webhook events,
 #    recording activity messages in the conversation timeline.
 #
@@ -73,25 +73,48 @@ module RaqmiConnect
     end
 
     def create_regular_message(message)
-      super
-      return unless group_message?
+      return super unless group_message?
 
-      prefix_group_sender_to_message!
+      create_message(message, source_id: message[:id])
+      attach_files
+      attach_location if message_type == 'location'
+      format_group_message_before_save!
+      @message.save!
     end
 
-    def prefix_group_sender_to_message!
-      return if outgoing_echo || @message.blank?
+    def create_unsupported_message(message)
+      return super unless group_message?
 
-      sender_name = extract_group_sender_info[:name]
-      return if sender_name.blank?
+      log_error(message) if error_webhook_event?(message)
+      process_in_reply_to(message)
+      create_message(message, source_id: message[:id])
+      @message.content = I18n.t('conversations.messages.whatsapp.unsupported_message')
+      @message.content_attributes = @message.content_attributes.merge(is_unsupported: true)
+      format_group_message_before_save!
+      @message.save!
+    end
 
-      prefix = "[#{sender_name}]: "
+    def format_group_message_before_save!
+      return if @message.blank?
+
+      sender_info = extract_group_sender_info
+      attrs = (@message.content_attributes || {}).merge(
+        'is_group' => true,
+        'group_id' => current_group_id
+      )
+      attrs['group_sender'] = sender_info unless outgoing_echo
+      @message.content_attributes = attrs
+
+      return if outgoing_echo || sender_info[:name].blank?
+
+      prefix = "[#{sender_info[:name]}]: "
       if @message.content.present?
-        return if @message.content.start_with?(prefix)
-
-        @message.update!(content: "#{prefix}#{@message.content}")
+        @message.content = "#{prefix}#{@message.content}" unless @message.content.start_with?(prefix)
+      elsif message_type == 'location'
+        loc_name = @message.attachments.first&.fallback_title
+        @message.content = "#{prefix}#{loc_name.presence || 'shared a location'}"
       elsif @message.attachments.present?
-        @message.update!(content: "#{prefix}sent an attachment")
+        @message.content = "#{prefix}sent an attachment"
       end
     end
 
@@ -128,6 +151,7 @@ module RaqmiConnect
       if contact_inbox.blank?
         contact_attributes = {
           name: name,
+          identifier: "whatsapp_group_#{group_id}",
           additional_attributes: {
             is_group: true,
             group_id: group_id,
@@ -197,9 +221,9 @@ module RaqmiConnect
     end
 
     def process_group_lifecycle_event
-      groups = Array(processed_params[:groups])
+      groups = Array(processed_params[:groups] || processed_params[:group])
       groups.each do |group_data|
-        group_id = group_data[:group_id]
+        group_id = group_data[:group_id] || group_data[:id]
         next if group_id.blank?
 
         subject = group_data[:subject]
@@ -209,7 +233,7 @@ module RaqmiConnect
         contact_inbox = find_or_build_group_contact(group_id, subject: subject, invite_link: invite_link, description: description)
         conversation = find_or_create_group_conversation(contact_inbox, group_id)
 
-        case group_data[:type]
+        case group_data[:type].to_s
         when 'group_create'
           text = "WhatsApp group created: #{subject.presence || group_id}"
           text += " (Invite link: #{invite_link})" if invite_link.present?
@@ -223,11 +247,11 @@ module RaqmiConnect
 
     def process_group_participants_event
       group_data = processed_params[:group] || {}
-      group_id = group_data[:id]
+      group_id = group_data[:id] || group_data[:group_id]
       return if group_id.blank?
 
       event = processed_params[:event].to_s.upcase
-      participants = Array(processed_params[:participants])
+      participants = Array(processed_params[:participants] || group_data[:participants])
 
       contact_inbox = find_or_build_group_contact(group_id)
       conversation = find_or_create_group_conversation(contact_inbox, group_id)

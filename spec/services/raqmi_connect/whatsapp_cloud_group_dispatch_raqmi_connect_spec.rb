@@ -79,4 +79,35 @@ describe RaqmiConnect::WhatsappCloudGroupDispatch do
       expect(result).to eq('wamid.HBgLGroupTemplateMsg123')
     end
   end
+
+  describe '#send_interactive_text_message to a group' do
+    it 'converts interactive options to formatted plain text to adhere to Meta group limits' do
+      message = create(:message, account: inbox.account, inbox: inbox, conversation: conversation,
+                                 message_type: :outgoing, content_type: 'input_select',
+                                 content: 'Please choose an option:',
+                                 content_attributes: {
+                                   items: [
+                                     { title: 'Billing', value: 'billing' },
+                                     { title: 'Tech Support', value: 'tech' }
+                                   ]
+                                 })
+
+      stub_request(:post, messages_endpoint)
+        .with(body: {
+          messaging_product: 'whatsapp',
+          recipient_type: 'group',
+          to: '120363012345678901@g.us',
+          text: { body: "Please choose an option:\n\n1. Billing\n2. Tech Support" },
+          type: 'text'
+        }.to_json)
+        .to_return(
+          status: 200,
+          body: { messages: [{ id: 'wamid.HBgLGroupInteractiveFallback123' }] }.to_json,
+          headers: { 'content-type' => 'application/json' }
+        )
+
+      result = channel.send_message('120363012345678901@g.us', message)
+      expect(result).to eq('wamid.HBgLGroupInteractiveFallback123')
+    end
+  end
 end

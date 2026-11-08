@@ -122,6 +122,43 @@ describe RaqmiConnect::WhatsappIncomingGroupMessage do
         '[Bob]: Second message'
       ])
     end
+
+    it 'prefixes location messages with sender name and location title' do
+      group_id = '120363098765432101@g.us'
+      payload = {
+        object: 'whatsapp_business_account',
+        entry: [{
+          id: '12345',
+          changes: [{
+            field: 'messages',
+            value: {
+              messaging_product: 'whatsapp',
+              contacts: [{ wa_id: '15551234567', profile: { name: 'Charlie' } }],
+              messages: [{
+                from: '15551234567',
+                group_id: group_id,
+                id: 'wamid.LocationMsg1',
+                timestamp: '1714152010',
+                type: 'location',
+                location: {
+                  latitude: 25.2048,
+                  longitude: 55.2708,
+                  name: 'Burj Khalifa',
+                  address: 'Downtown Dubai'
+                }
+              }]
+            }
+          }]
+        }]
+      }.with_indifferent_access
+
+      Whatsapp::IncomingMessageWhatsappCloudService.new(inbox: inbox, params: payload).perform
+
+      contact_inbox = inbox.contact_inboxes.find_by(source_id: group_id)
+      message = contact_inbox.conversations.last.messages.last
+      expect(message.content).to eq('[Charlie]: Burj Khalifa, Downtown Dubai')
+      expect(message.attachments.first.file_type).to eq('location')
+    end
   end
 
   describe 'group lifecycle webhooks' do

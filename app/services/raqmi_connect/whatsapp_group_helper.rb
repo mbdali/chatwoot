@@ -10,7 +10,7 @@ module RaqmiConnect
       return false if identifier.blank?
 
       str = identifier.to_s
-      str.ends_with?('@g.us') || str.start_with?('group_') || str.match?(/\A\d{10,30}_\d+\z/)
+      str.ends_with?('@g.us') || str.start_with?('group_') || str.match?(/\A\d{10,30}_\d+\z/) || str.match?(/\A120363\d{10,20}\z/)
     end
 
     def extract_group_id(payload_or_message)
@@ -24,7 +24,8 @@ module RaqmiConnect
                    msg.dig(:context, :group_id).presence ||
                    msg.dig(:context, :group).presence ||
                    val.dig(:group, :id).presence ||
-                   val.dig(:groups, 0, :group_id).presence
+                   val.dig(:groups, 0, :group_id).presence ||
+                   val.dig(:group, :group_id).presence
 
         return group_id.to_s if group_id.present?
 
