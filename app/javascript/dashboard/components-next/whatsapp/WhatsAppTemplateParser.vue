@@ -15,6 +15,7 @@ import { useI18n } from 'vue-i18n';
 
 import { isWhatsAppComplete } from '@chatwoot/utils';
 import Input from 'dashboard/components-next/input/Input.vue';
+import WhatsappTemplateMediaUploader from './WhatsappTemplateMediaUploader.vue';
 import {
   buildTemplateParameters,
   allKeysRequired,
@@ -78,11 +79,6 @@ const hasMediaHeader = computed(() =>
   MEDIA_FORMATS.includes(headerComponent.value?.format)
 );
 
-const formatType = computed(() => {
-  const format = headerComponent.value?.format;
-  return format ? format.charAt(0) + format.slice(1).toLowerCase() : '';
-});
-
 const isDocumentTemplate = computed(() => {
   return headerComponent.value?.format?.toLowerCase() === 'document';
 });
@@ -145,6 +141,15 @@ const updateMediaName = value => {
   processedParams.value.header.media_name = value;
 };
 
+const updateBlobSignedId = value => {
+  processedParams.value.header ??= {};
+  if (value) {
+    processedParams.value.header.blob_signed_id = value;
+  } else {
+    delete processedParams.value.header.blob_signed_id;
+  }
+};
+
 const sendMessage = () => {
   v$.value.$touch();
   if (v$.value.$invalid) return;
@@ -199,6 +204,7 @@ defineExpose({
   v$,
   updateMediaUrl,
   updateMediaName,
+  updateBlobSignedId,
   sendMessage,
   resetTemplate,
   goBack,
@@ -238,37 +244,16 @@ defineExpose({
 
     <div v-if="hasVariables || hasMediaHeader">
       <div v-if="hasMediaHeader" class="mb-4">
-        <p class="mb-2.5 text-sm font-semibold">
-          {{
-            $t('WHATSAPP_TEMPLATES.PARSER.MEDIA_HEADER_LABEL', {
-              type: formatType,
-            }) || `${formatType} Header`
-          }}
-        </p>
-        <div class="flex items-center mb-2.5">
-          <Input
-            :model-value="processedParams.header?.media_url || ''"
-            type="url"
-            class="flex-1"
-            :placeholder="
-              t('WHATSAPP_TEMPLATES.PARSER.MEDIA_URL_LABEL', {
-                type: formatType,
-              })
-            "
-            @update:model-value="updateMediaUrl"
-          />
-        </div>
-        <div v-if="isDocumentTemplate" class="flex items-center mb-2.5">
-          <Input
-            :model-value="processedParams.header?.media_name || ''"
-            type="text"
-            class="flex-1"
-            :placeholder="
-              t('WHATSAPP_TEMPLATES.PARSER.DOCUMENT_NAME_PLACEHOLDER')
-            "
-            @update:model-value="updateMediaName"
-          />
-        </div>
+        <WhatsappTemplateMediaUploader
+          :media-format="headerComponent?.format"
+          :media-url="processedParams.header?.media_url || ''"
+          :media-name="processedParams.header?.media_name || ''"
+          :blob-signed-id="processedParams.header?.blob_signed_id || ''"
+          :is-document-template="isDocumentTemplate"
+          @update:media-url="updateMediaUrl"
+          @update:media-name="updateMediaName"
+          @update:blob-signed-id="updateBlobSignedId"
+        />
       </div>
 
       <!-- Text Header Variables Section -->

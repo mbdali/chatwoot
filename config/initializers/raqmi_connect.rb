@@ -30,6 +30,7 @@ Rails.application.config.to_prepare do
   Whatsapp::Providers::BaseService.prepend(RaqmiConnect::WhatsappProviderErrorClassification)
   SendReplyJob.prepend(RaqmiConnect::SendReplyJobDispatchFailure)
   Api::V1::Accounts::Conversations::MessagesController.prepend(RaqmiConnect::MessageRetryGuard)
+  Messages::MessageBuilder.prepend(RaqmiConnect::WhatsappTemplateAttachmentBuilder)
 
   if RaqmiConnect.custom_roles?
     [:CustomRole, :CustomRolePolicy].each do |const_name|
@@ -67,6 +68,11 @@ Rails.application.config.after_initialize do
             get :messages, to: '/raqmi_connect/message_reports#show'
           end
           resources :whatsapp_groups, only: [:create], controller: '/raqmi_connect/whatsapp_groups'
+          resources :whatsapp_templates, only: [] do
+            collection do
+              post :upload_media, controller: '/raqmi_connect/whatsapp_template_uploads', action: :create
+            end
+          end
           resources :conversations, only: [] do
             scope module: :conversations do
               resources :messages, only: [] do

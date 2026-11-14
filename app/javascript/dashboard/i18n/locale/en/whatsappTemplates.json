@@ -42,7 +42,18 @@
       "COUPON_CODE": "Enter coupon code (max 15 chars)",
       "MEDIA_URL_LABEL": "Enter {type} URL",
       "DOCUMENT_NAME_PLACEHOLDER": "Enter document filename (e.g., Invoice_2025.pdf)",
-      "BUTTON_PARAMETER": "Enter button parameter"
+      "BUTTON_PARAMETER": "Enter button parameter",
+      "UPLOAD_TAB": "Upload File",
+      "URL_TAB": "File URL",
+      "UPLOAD_PROMPT": "Click to upload or drag & drop",
+      "UPLOAD_HELP_TEXT": "{type} up to {maxSize}",
+      "UPLOADING": "Uploading {filename}...",
+      "UPLOAD_SUCCESS": "File uploaded successfully",
+      "UPLOAD_ERROR": "Failed to upload file. Please try again.",
+      "REMOVE_FILE": "Remove",
+      "REPLACE_FILE": "Replace",
+      "FILE_SIZE_LIMIT": "File exceeds maximum size limit of {maxSize}",
+      "INVALID_FILE_TYPE": "Invalid file format for {type} header"
     }
   }
 }

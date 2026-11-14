@@ -44,6 +44,7 @@ Not the `custom/` extension folder: `ChatwootApp.extensions` loads `enterprise` 
 | `RaqmiConnect::CsatSurveyResponsePolicyCustomRole` | `CsatSurveyResponsePolicy` | `index?`, `metrics?`, `download?` | Grants CSAT survey access with `report_manage` |
 | `RaqmiConnect::HelpCenterPolicyCustomRole` | `PortalPolicy`, `ArticlePolicy`, `CategoryPolicy` | `index?`, `show?`, `create?`, `update?`, `edit?`, `destroy?`, `reorder?`, `logo?`, `send_instructions?`, `ssl_status?` | Manages Help Center access with `knowledge_base_manage` |
 | `RaqmiConnect::AccountDashboard` | `AccountDashboard` | `attribute_types`, `show_page_attributes`, `form_attributes`, `permitted_attributes` | Exposes features and limits management tabs and fields in Super Admin without Enterprise |
+| `RaqmiConnect::WhatsappTemplateAttachmentBuilder` | `Messages::MessageBuilder` | `perform`, `@params` | Automatically attaches uploaded template media blobs to `message.attachments` and enqueues background download for public template media URLs so agents can preview and download sent documents |
 
 Constants defined when `enterprise/` is absent: `::CustomRole` (`RaqmiConnect::CustomRole`), `::CustomRolePolicy` (`RaqmiConnect::CustomRolePolicy`), and `Api::V1::Accounts::CustomRolesController` (`RaqmiConnect::CustomRolesController`).
 
@@ -61,6 +62,7 @@ The production Docker build and deployment guide is in `docs/raqmiconnect-deploy
 `app/fields/account_limits_field.rb`, `app/views/fields/account_features_field/`,
 `app/views/fields/account_limits_field/`, the PDF viewer, message reactions (`MessageReactions.vue`, `QuickReactionPicker.vue`),
 WhatsApp groups (`CreateWhatsappGroupModal.vue`, `WhatsappGroupCard.vue`, `whatsappGroupsAPI.js`),
+WhatsApp template media upload (`WhatsappTemplateMediaUploader.vue`, `whatsappTemplateUploadAPI.js`),
 messages report (`MessagesReport.vue`, `messageReports.js`), conversation search components,
 brand assets under `public/custom-brand/`, `public/brand-assets/`, and `docs/`.
 
@@ -77,6 +79,7 @@ Frontend, branding, and minimal view guards; Ruby behaviour lives in prepended m
 - `app/javascript/dashboard/routes/dashboard/settings/customRoles/customRole.routes.js`: community installation type for custom roles
 - `app/views/api/v1/models/_agent.json.jbuilder`, `app/views/api/v1/models/_user.json.jbuilder`: custom role reflection guards
 - `app/javascript/dashboard/components/ChatList.vue`, `i18n/locale/en/chatlist.json`: in-place search
+- `app/javascript/dashboard/components-next/whatsapp/WhatsAppTemplateParser.vue`, `i18n/locale/en/whatsappTemplates.json`: WhatsApp template direct upload
 - `app/javascript/dashboard/i18n/locale/en/conversation.json`, `app/javascript/entrypoints/dashboard.js`
 - `app/javascript/dashboard/i18n/locale/en/report.json`: `MESSAGES_REPORT` copy
 - `app/javascript/dashboard/i18n/locale/en/settings.json`: `SIDEBAR.REPORTS_MESSAGES` copy

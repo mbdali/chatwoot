@@ -74,4 +74,52 @@ describe('WhatsAppTemplateParser', () => {
       },
     });
   });
+
+  it('sends template parameters with media_url, media_name, and blob_signed_id', async () => {
+    const mediaTemplate = {
+      name: 'invoice_receipt',
+      category: 'UTILITY',
+      language: 'en',
+      components: [
+        {
+          type: 'HEADER',
+          format: 'DOCUMENT',
+        },
+        {
+          type: 'BODY',
+          text: 'Here is your receipt',
+        },
+      ],
+    };
+
+    const mediaWrapper = shallowMount(WhatsAppTemplateParser, {
+      props: { template: mediaTemplate },
+      global: {
+        mocks: {
+          $t: key => key,
+        },
+      },
+    });
+
+    mediaWrapper.vm.updateMediaUrl('https://storage.example.com/receipt.pdf');
+    mediaWrapper.vm.updateMediaName('Invoice_2026.pdf');
+    mediaWrapper.vm.updateBlobSignedId('signed_blob_abc123');
+    await nextTick();
+
+    mediaWrapper.vm.sendMessage();
+
+    expect(mediaWrapper.emitted('sendMessage')[0][0]).toMatchObject({
+      message: 'Here is your receipt',
+      templateParams: {
+        name: 'invoice_receipt',
+        processed_params: {
+          header: {
+            media_url: 'https://storage.example.com/receipt.pdf',
+            media_name: 'Invoice_2026.pdf',
+            blob_signed_id: 'signed_blob_abc123',
+          },
+        },
+      },
+    });
+  });
 });
