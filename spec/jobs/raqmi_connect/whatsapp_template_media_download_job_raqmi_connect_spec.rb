@@ -18,21 +18,14 @@ describe RaqmiConnect::WhatsappTemplateMediaDownloadJob do
 
   describe '#perform' do
     it 'downloads remote file and attaches it to attachment.file, then fires send_update_event' do
-      temp_file = Tempfile.new(['invoice', '.pdf'])
-      temp_file.write('%PDF-1.4 test')
-      temp_file.rewind
+      stub_request(:get, 'https://example.com/invoice.pdf').to_return(
+        status: 200,
+        body: File.read('spec/assets/sample.pdf'),
+        headers: { 'Content-Type' => 'application/pdf' }
+      )
 
-      # Down::ChunkedIO / tempfile mock
-      allow(temp_file).to receive(:content_type).and_return('application/pdf')
-      allow(temp_file).to receive(:original_filename).and_return('invoice.pdf')
-      allow(Down).to receive(:download).with(
-        'https://example.com/invoice.pdf',
-        max_size: 100.megabytes,
-        read_timeout: 30,
-        open_timeout: 30
-      ).and_return(temp_file)
-
-      expect(message).to receive(:send_update_event)
+      allow(Attachment).to receive(:find_by).with(id: attachment.id).and_return(attachment)
+      expect(attachment.message).to receive(:send_update_event)
 
       described_class.new.perform(attachment.id)
 
@@ -47,12 +40,13 @@ describe RaqmiConnect::WhatsappTemplateMediaDownloadJob do
         content_type: 'application/pdf'
       )
 
-      expect(Down).not_to receive(:download)
       described_class.new.perform(attachment.id)
+
+      expect(WebMock).not_to have_requested(:get, 'https://example.com/invoice.pdf')
     end
 
     it 'logs and handles Down::Error gracefully without re-raising' do
-      allow(Down).to receive(:download).and_raise(Down::NotFound.new('404 Not Found'))
+      stub_request(:get, 'https://example.com/invoice.pdf').to_return(status: 404)
 
       expect { described_class.new.perform(attachment.id) }.not_to raise_error
       expect(attachment.reload.file.attached?).to be false
