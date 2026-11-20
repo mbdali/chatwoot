@@ -20,13 +20,13 @@ services:
       - "6379:6379"
 
   base: &base
-    image: raqmilabs/raqmi-connect:v4.19.1-custom
+    image: raqmilabs/raqmi-connect:v4.20.1
     # Build your local fork with custom branding and Vue/Tailwind tweaks
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        BUNDLE_JOBS: 1
+        BUNDLE_JOBS: 4
         BUNDLE_WITHOUT: "development:test"
     env_file: .env
     volumes:
