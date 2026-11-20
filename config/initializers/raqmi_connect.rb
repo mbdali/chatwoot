@@ -6,6 +6,10 @@
 # Not the `custom/` extension folder: ChatwootApp.extensions loads `enterprise` with it and ignores
 # DISABLE_ENTERPRISE.
 
+if defined?(ActiveRecord::Migration::Compatibility) && !defined?(ActiveRecord::Migration::Compatibility::V8_0)
+  ActiveRecord::Migration::Compatibility::V8_0 = ActiveRecord::Migration::Current
+end
+
 module RaqmiConnect
   def self.custom_roles?
     !Rails.root.join('enterprise').exist?

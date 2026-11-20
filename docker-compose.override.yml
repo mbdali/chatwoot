@@ -8,8 +8,8 @@ services:
     volumes:
       - ./app:/app/app
       - ./config:/app/config
-      - ./lib/tasks:/app/lib/tasks
-      - ./lib/custom_exceptions:/app/lib/custom_exceptions
+      - ./db:/app/db
+      - ./lib:/app/lib
       - ./spec:/app/spec
       - ./theme:/app/theme
       - ./public/vite:/app/public/vite
@@ -19,8 +19,8 @@ services:
     volumes:
       - ./app:/app/app
       - ./config:/app/config
-      - ./lib/tasks:/app/lib/tasks
-      - ./lib/custom_exceptions:/app/lib/custom_exceptions
+      - ./db:/app/db
+      - ./lib:/app/lib
       - gems_data:/gems
 
 volumes:
